@@ -13,7 +13,7 @@ import urllib.request
 import subprocess
 from typing import Callable, Optional, Dict, Any
 
-CURRENT_VERSION = "1.0.2"
+CURRENT_VERSION = "1.0.3"
 GITHUB_REPO = "Pecosenpai/peko-score"
 API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
@@ -96,7 +96,7 @@ def check_for_updates_async(callback: Callable[[Dict[str, Any]], None]):
     t = threading.Thread(target=_worker, daemon=True)
     t.start()
 
-def execute_baton_pass_update(zip_path: str, base_dir: str, on_ready_to_exit: Optional[Callable[[], None]] = None):
+def execute_baton_pass_update(zip_path: str, base_dir: str, new_version: str = "", on_ready_to_exit: Optional[Callable[[], None]] = None):
     """
     バトンタッチ用バッチファイルを作成し、自身を終了してファイルを置換・再起動する
     """
@@ -135,6 +135,13 @@ def execute_baton_pass_update(zip_path: str, base_dir: str, on_ready_to_exit: Op
         main_script = os.path.join(base_dir, "app.py")
         relaunch_cmd = f'start "" "{py_exe}" "{main_script}"'
 
+    clean_ver = new_version.lstrip("v") if new_version else ""
+    reg_update_cmd = ""
+    if clean_ver:
+        # Inno Setup の HKCU 側アンインストール情報キー (AppId)
+        app_id_key = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{E681C3D8-7B84-48E1-9AE9-482026PEKO01}_is1"
+        reg_update_cmd = f'reg add "{app_id_key}" /v DisplayVersion /t REG_SZ /d "{clean_ver}" /f >nul 2>&1\n'
+
     bat_path = os.path.join(base_dir, "_apply_update.bat")
     bat_content = f"""@echo off
 chcp 65001 >nul
@@ -148,6 +155,8 @@ robocopy "{src_dir}" "{base_dir}" /E /XF config.json _apply_update.bat >nul
 rd /s /q "{temp_extract_dir}" >nul 2>&1
 del /f /q "{zip_path}" >nul 2>&1
 
+:: Windowsのインストール情報(バージョン)を更新
+{reg_update_cmd}
 :: 新バージョン再起動
 {relaunch_cmd}
 
@@ -172,6 +181,7 @@ exit
 def download_and_install_update(
     download_url: str,
     base_dir: str,
+    new_version: str = "",
     progress_callback: Optional[Callable[[float], None]] = None,
     on_error: Optional[Callable[[str], None]] = None,
     on_ready_to_exit: Optional[Callable[[], None]] = None
@@ -206,7 +216,7 @@ def download_and_install_update(
                 progress_callback(1.0)
             
             time.sleep(0.3)
-            execute_baton_pass_update(zip_dest, base_dir, on_ready_to_exit)
+            execute_baton_pass_update(zip_dest, base_dir, new_version, on_ready_to_exit)
 
         except Exception as e:
             if on_error:

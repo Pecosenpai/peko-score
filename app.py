@@ -858,7 +858,14 @@ class PekoScoreApp(ctk.CTk):
             def on_ready_exit():
                 prog_queue.put((1.0, None, True))
 
-            updater.download_and_install_update(dl_url, base_dir, on_progress, on_err, on_ready_exit)
+            updater.download_and_install_update(
+                dl_url,
+                base_dir,
+                new_version=latest_v,
+                progress_callback=on_progress,
+                on_error=on_err,
+                on_ready_to_exit=on_ready_exit
+            )
 
             def poll_progress():
                 try:
