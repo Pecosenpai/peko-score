@@ -16,6 +16,7 @@ ENV/
 # ビルド・パッケージング成果物
 build/
 dist/
+dist_installer/
 *.spec
 
 # 一時テスト画像・ログ・下絵素材

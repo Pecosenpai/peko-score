@@ -51,6 +51,20 @@ COLOR_RESET_HOVER = ("#D17A70", "#6F423D")
 COLOR_UNDO_BTN = ("#7CA5B8", "#384B54")       # Undoボタン
 COLOR_UNDO_HOVER = ("#6A91A3", "#465C66")
 
+def get_app_dir():
+    """実行ファイルまたはスクリプトが置かれているフォルダ (ユーザー設定・作業用)"""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+def get_resource_dir():
+    """バンドルされた静的リソース (アイコン、テンプレート、Web) のルートフォルダ"""
+    if getattr(sys, 'frozen', False):
+        if hasattr(sys, '_MEIPASS'):
+            return sys._MEIPASS
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
 class PekoScoreApp(ctk.CTk):
     def _windows_set_titlebar_color(self, color_mode: str):
         """
@@ -84,7 +98,7 @@ class PekoScoreApp(ctk.CTk):
         iconbitmap + iconphoto (複数解像度) + Win32 API (WM_SETICON / SetClassLongPtr) を
         組み合わせることで、タスクバーがTkinter標準の青い羽になるのを防ぎます。
         """
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_resource_dir()
         ico_path = os.path.join(base_dir, "icon.ico")
         png_path = os.path.join(base_dir, "icon.png")
 
@@ -173,7 +187,7 @@ class PekoScoreApp(ctk.CTk):
         self.update_result_queue = queue.Queue()
 
         # 自動検知サービス初期化
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_resource_dir()
         templates_dir = os.path.join(base_dir, "samples", "templates")
         self.detector = AutoDetectorService(self.app_state, templates_dir, on_result_callback=self.on_detect_result)
         self.detector.start()
@@ -223,7 +237,7 @@ class PekoScoreApp(ctk.CTk):
         self.header_brand.grid(row=0, column=0, padx=14, pady=(20, 14), sticky="ew")
 
         # もう1周り大きい 52x52px の可愛いマスコットアイコン (中央配置)
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_resource_dir()
         png_path = os.path.join(base_dir, "icon.png")
         if os.path.exists(png_path):
             try:
@@ -697,8 +711,9 @@ class PekoScoreApp(ctk.CTk):
         lbl_desc.pack(anchor="w", padx=20, pady=(16, 20))
 
     def load_help_content(self):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        path = os.path.join(base_dir, "help_content.json")
+        path = os.path.join(get_app_dir(), "help_content.json")
+        if not os.path.exists(path):
+            path = os.path.join(get_resource_dir(), "help_content.json")
         default_content = {
             "app_info": {
                 "version": "Ver 1.0.0",
@@ -833,7 +848,7 @@ class PekoScoreApp(ctk.CTk):
             prog_bar.pack(pady=(0, 8))
             lbl_prog.configure(text="最新版をダウンロード中...")
 
-            base_dir = os.path.dirname(os.path.abspath(__file__))
+            base_dir = get_app_dir()
 
             prog_queue = queue.Queue()
             def on_progress(p):
@@ -907,7 +922,7 @@ class PekoScoreApp(ctk.CTk):
         self.help_container.grid_rowconfigure(0, weight=1)
 
         # 初期mtimeの記録
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_app_dir()
         path = os.path.join(base_dir, "help_content.json")
         if os.path.exists(path):
             self.last_help_mtime = os.path.getmtime(path)
@@ -937,7 +952,7 @@ class PekoScoreApp(ctk.CTk):
         card_left.pack_propagate(False)
 
         # マスコットアイコン (コンパクトな48x48)
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = get_resource_dir()
         png_path = os.path.join(base_dir, "icon.png")
         if os.path.exists(png_path):
             try:
@@ -1111,8 +1126,9 @@ class PekoScoreApp(ctk.CTk):
         self.after(50, on_right_card_resize)
 
     def check_help_content_reload(self):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        path = os.path.join(base_dir, "help_content.json")
+        path = os.path.join(get_app_dir(), "help_content.json")
+        if not os.path.exists(path):
+            path = os.path.join(get_resource_dir(), "help_content.json")
         if os.path.exists(path):
             try:
                 mtime = os.path.getmtime(path)

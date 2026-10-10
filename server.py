@@ -88,8 +88,15 @@ class OBSServerHandler(http.server.SimpleHTTPRequestHandler):
         # コンソールログを静音化
         pass
 
+def get_resource_dir():
+    if getattr(sys, 'frozen', False):
+        if hasattr(sys, '_MEIPASS'):
+            return sys._MEIPASS
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
 def start_server(state_holder: StateHolder, port=8080):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = get_resource_dir()
     web_dir = os.path.join(base_dir, "web")
     OBSServerHandler.state_holder = state_holder
     OBSServerHandler.web_dir = web_dir
