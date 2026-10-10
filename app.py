@@ -852,19 +852,26 @@ class PekoScoreApp(ctk.CTk):
 
             prog_queue = queue.Queue()
             def on_progress(p):
-                prog_queue.put((p, None))
+                prog_queue.put((p, None, False))
             def on_err(err_msg):
-                prog_queue.put((None, err_msg))
+                prog_queue.put((None, err_msg, False))
+            def on_ready_exit():
+                prog_queue.put((1.0, None, True))
 
-            updater.download_and_install_update(dl_url, base_dir, on_progress, on_err)
+            updater.download_and_install_update(dl_url, base_dir, on_progress, on_err, on_ready_exit)
 
             def poll_progress():
                 try:
                     while not prog_queue.empty():
-                        p, err = prog_queue.get_nowait()
+                        p, err, should_exit = prog_queue.get_nowait()
                         if err:
                             lbl_prog.configure(text=f"エラー: {err}", text_color="#D9534F")
                             btn_browser.configure(state="normal")
+                        elif should_exit:
+                            lbl_prog.configure(text="更新を適用して再起動します...")
+                            # アプリを完全に終了してバッチにファイルを委ねる
+                            self.after(300, self.on_close_and_force_exit)
+                            return
                         elif p is not None:
                             prog_bar.set(p)
                             pct = int(p * 100)
@@ -1602,6 +1609,13 @@ class PekoScoreApp(ctk.CTk):
         self.hotkey_service.stop()
         self.detector.stop()
         self.destroy()
+
+    def on_close_and_force_exit(self):
+        try:
+            self.on_close()
+        except Exception:
+            pass
+        os._exit(0)
 
 if __name__ == "__main__":
     app = PekoScoreApp()

@@ -1,5 +1,5 @@
 #define MyAppName "ぺこすこあ"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "ぺこぺこ堂"
 #define MyAppURL "https://github.com/Pecosenpai/peko-score"
 #define MyAppExeName "PekoScore.exe"
@@ -16,7 +16,7 @@ DefaultDirName={autopf}\PekoScore
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=dist_installer
-OutputBaseFilename=PekoScore-Setup-v1.0.1
+OutputBaseFilename=PekoScore-Setup-v1.0.2
 SetupIconFile=icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -38,3 +38,31 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilen
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}\_update_extracted"
+Type: files; Name: "{app}\_peko_update.zip"
+Type: files; Name: "{app}\_apply_update.bat"
+
+[Code]
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  ConfigFile: String;
+begin
+  if CurUninstallStep = usPostUninstall then
+  begin
+    ConfigFile := ExpandConstant('{app}\config.json');
+    if FileExists(ConfigFile) then
+    begin
+      if MsgBox('設定ファイル（勝敗スコアやキー設定）も削除して完全にアンインストールしますか？', mbConfirmation, MB_YESNO) = idYes then
+      begin
+        DeleteFile(ConfigFile);
+        RemoveDir(ExpandConstant('{app}'));
+      end;
+    end
+    else
+    begin
+      RemoveDir(ExpandConstant('{app}'));
+    end;
+  end;
+end;

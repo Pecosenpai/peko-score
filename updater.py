@@ -13,7 +13,7 @@ import urllib.request
 import subprocess
 from typing import Callable, Optional, Dict, Any
 
-CURRENT_VERSION = "1.0.1"
+CURRENT_VERSION = "1.0.2"
 GITHUB_REPO = "Pecosenpai/peko-score"
 API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
@@ -96,7 +96,7 @@ def check_for_updates_async(callback: Callable[[Dict[str, Any]], None]):
     t = threading.Thread(target=_worker, daemon=True)
     t.start()
 
-def execute_baton_pass_update(zip_path: str, base_dir: str):
+def execute_baton_pass_update(zip_path: str, base_dir: str, on_ready_to_exit: Optional[Callable[[], None]] = None):
     """
     バトンタッチ用バッチファイルを作成し、自身を終了してファイルを置換・再起動する
     """
@@ -139,7 +139,7 @@ def execute_baton_pass_update(zip_path: str, base_dir: str):
     bat_content = f"""@echo off
 chcp 65001 >nul
 echo ぺこすこあ をアップデート中...
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 
 :: ファイル置換 (config.json等は保護)
 robocopy "{src_dir}" "{base_dir}" /E /XF config.json _apply_update.bat >nul
@@ -158,19 +158,23 @@ exit
     with open(bat_path, "w", encoding="utf-8") as f:
         f.write(bat_content)
 
-    # バックグラウンドでバッチ起動して自プロセス終了
+    # バックグラウンドでバッチ起動
     subprocess.Popen(
         ["cmd.exe", "/c", bat_path],
         creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
         close_fds=True
     )
-    sys.exit(0)
+    if on_ready_to_exit:
+        on_ready_to_exit()
+    else:
+        os._exit(0)
 
 def download_and_install_update(
     download_url: str,
     base_dir: str,
     progress_callback: Optional[Callable[[float], None]] = None,
-    on_error: Optional[Callable[[str], None]] = None
+    on_error: Optional[Callable[[str], None]] = None,
+    on_ready_to_exit: Optional[Callable[[], None]] = None
 ):
     """
     更新zipをダウンロードし、完了後にバトンタッチ実行
@@ -202,7 +206,7 @@ def download_and_install_update(
                 progress_callback(1.0)
             
             time.sleep(0.3)
-            execute_baton_pass_update(zip_dest, base_dir)
+            execute_baton_pass_update(zip_dest, base_dir, on_ready_to_exit)
 
         except Exception as e:
             if on_error:
