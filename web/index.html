@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ぺこすこあ OBS Overlay</title>
+    <!-- Google Fonts: Zen Maru Gothic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&family=M+PLUS+Rounded+1c:wght@800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: transparent;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 共通アニメーション (数字だけがポヨンと跳ねる) */
+        .score-num {
+            display: inline-block;
+            font-variant-numeric: tabular-nums;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            will-change: transform;
+        }
+
+        @keyframes winPop {
+            0% { transform: scale(1); filter: brightness(1); }
+            40% { transform: scale(1.38) translateY(-4px); filter: brightness(1.6); }
+            70% { transform: scale(0.92); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        @keyframes lossPop {
+            0% { transform: scale(1); filter: brightness(1); }
+            40% { transform: scale(1.38) translateY(-4px); filter: brightness(1.6); }
+            70% { transform: scale(0.92); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        .anim-win-pop {
+            animation: winPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .anim-loss-pop {
+            animation: lossPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* ========================================================
+           SKIN 1: グラスモーフィズム HUD (Design 3)
+           ======================================================== */
+        /* ========================================================
+           SKIN 1: グラスモーフィズム HUD (Design 3)
+           ======================================================== */
+        .skin-glassmorphism {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 38px 18px 38px;
+            background: var(--gm-bg, rgba(22, 33, 27, 0.65));
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: 40px;
+            border: 1.5px solid var(--gm-border, rgba(132, 196, 160, 0.45));
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.45),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3),
+                0 0 18px var(--gm-glow, rgba(107, 185, 142, 0.25));
+            user-select: none;
+        }
+        .skin-glassmorphism .hud-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gm-border, #A2D5BA);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            opacity: 0.9;
+            text-shadow: 0 0 8px var(--gm-glow, rgba(107, 185, 142, 0.5));
+        }
+        .skin-glassmorphism .hud-header .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--gm-border, #6BE3A0);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--gm-border, #6BE3A0);
+            display: inline-block;
+        }
+        .skin-glassmorphism .hud-counter {
+            display: inline-flex;
+            align-items: baseline;
+            font-family: var(--font-family, 'Zen Maru Gothic', sans-serif);
+            font-size: var(--font-size, 58px);
+            font-weight: 900;
+            color: #FFFFFF;
+            letter-spacing: 1px;
+            line-height: 1.1;
+        }
+        .skin-glassmorphism .win-num {
+            color: var(--gm-win, #72EAA5);
+            text-shadow: 0 0 16px var(--gm-win-glow, rgba(114, 234, 165, 0.45)), 0 2px 4px rgba(0,0,0,0.6);
+        }
+        .skin-glassmorphism .loss-num {
+            color: var(--gm-loss, #FFA599);
+            text-shadow: 0 0 16px var(--gm-loss-glow, rgba(255, 165, 153, 0.45)), 0 2px 4px rgba(0,0,0,0.6);
+        }
+        .skin-glassmorphism .score-unit {
+            font-size: 0.65em;
+            color: #E2ECE5;
+            margin-left: 2px;
+            margin-right: 12px;
+            font-weight: 700;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            opacity: 0.9;
+        }
+        .skin-glassmorphism .score-unit.last {
+            margin-right: 0;
+        }
+
+        /* ========================================================
+           SKIN 2: ピルバッジ (Design 1)
+           ======================================================== */
+        .skin-badge {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            background: #F8F9F5;
+            border: 4px solid #DFE5DC;
+            border-radius: 28px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            overflow: hidden;
+            user-select: none;
+        }
+        .skin-badge .badge-top {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: var(--badge-top-bg, #6B9E83);
+            color: var(--badge-top-text, #FFFFFF);
+            padding: 8px 28px;
+            width: 100%;
+        }
+        .skin-badge .badge-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: var(--badge-bot-bg, #FFFFFF);
+            color: var(--badge-bot-text, #D47A70);
+            padding: 8px 28px;
+            width: 100%;
+        }
+        .skin-badge .hud-counter {
+            font-family: var(--font-family, 'Zen Maru Gothic', sans-serif);
+            font-size: var(--font-size, 52px);
+            font-weight: 900;
+            line-height: 1.1;
+        }
+        .skin-badge .badge-icon {
+            font-size: 0.6em;
+        }
+        .skin-badge .win-num { color: var(--badge-top-text, #FFFFFF); }
+        .skin-badge .loss-num { color: var(--badge-bot-text, #D47A70); }
+        .skin-badge .score-unit { font-size: 0.65em; margin-left: 4px; }
+
+        /* ========================================================
+           SKIN 3: レトロチケット (Design 2)
+           ======================================================== */
+        .skin-ticket {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 36px 14px 36px;
+            background: var(--ticket-bg, #F8FAF6);
+            border: 3px dashed var(--ticket-border, #7A9E88);
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            user-select: none;
+        }
+        .skin-ticket .hud-header {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--ticket-border, #557863);
+            letter-spacing: 2px;
+            margin-bottom: 2px;
+        }
+        .skin-ticket .hud-counter {
+            display: inline-flex;
+            align-items: baseline;
+            font-family: var(--font-family, 'Zen Maru Gothic', sans-serif);
+            font-size: var(--font-size, 56px);
+            font-weight: 900;
+            color: #384A40;
+            line-height: 1.1;
+        }
+        .skin-ticket .win-num { color: var(--ticket-win, #5F9175); }
+        .skin-ticket .loss-num { color: var(--ticket-loss, #C9685E); }
+        .skin-ticket .score-unit {
+            font-size: 0.65em;
+            color: #4A5E53;
+            margin-left: 2px;
+            margin-right: 12px;
+        }
+        .skin-ticket .score-unit.last { margin-right: 0; }
+
+        /* ========================================================
+           SKIN 4: シンプル文字のみ (Simple)
+           ======================================================== */
+        .skin-simple {
+            display: inline-block;
+            user-select: none;
+        }
+        .skin-simple .hud-counter {
+            display: inline-flex;
+            align-items: baseline;
+            font-family: var(--font-family, 'Zen Maru Gothic', 'Meiryo UI', sans-serif);
+            font-size: var(--font-size, 64px);
+            font-weight: 900;
+            color: #FFFFFF;
+            text-shadow: 
+                -2px -2px 0 var(--simple-shadow, #222222),  
+                 2px -2px 0 var(--simple-shadow, #222222),
+                -2px  2px 0 var(--simple-shadow, #222222),
+                 2px  2px 0 var(--simple-shadow, #222222),
+                 0px  4px 12px rgba(0, 0, 0, 0.6);
+            letter-spacing: 2px;
+        }
+        .skin-simple .win-num { color: var(--simple-win, #72EAA5); }
+        .skin-simple .loss-num { color: var(--simple-loss, #FFA599); }
+        .skin-simple .score-unit {
+            font-size: 0.7em;
+            color: var(--simple-unit, #FFFFFF);
+            margin-left: 2px;
+            margin-right: 12px;
+        }
+        .skin-simple .score-unit.last { margin-right: 0; }
+
+    </style>
+</head>
+<body>
+    <div id="root-container" class="skin-glassmorphism">
+        <!-- JSでスキンに応じて中身をレンダリング -->
+    </div>
+
+    <script>
+        let currentWins = -1;
+        let currentLosses = -1;
+        let currentSkin = "";
+
+        const rootContainer = document.getElementById('root-container');
+
+        function renderSkin(skin, wins, losses) {
+            if (skin === 'badge') {
+                rootContainer.className = 'skin-badge';
+                rootContainer.innerHTML = `
+                    <div class="badge-top">
+                        <div class="hud-counter">
+                            <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">勝</span>
+                        </div>
+                    </div>
+                    <div class="badge-bottom">
+                        <div class="hud-counter">
+                            <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit">敗</span>
+                        </div>
+                    </div>
+                `;
+            } else if (skin === 'ticket') {
+                rootContainer.className = 'skin-ticket';
+                rootContainer.innerHTML = `
+                    <div class="hud-header">✦ PEKOSCORE ✦</div>
+                    <div class="hud-counter">
+                        <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">勝</span>
+                        <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit last">敗</span>
+                    </div>
+                `;
+            } else if (skin === 'simple') {
+                rootContainer.className = 'skin-simple';
+                rootContainer.innerHTML = `
+                    <div class="hud-counter">
+                        <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">勝</span>
+                        <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit last">敗</span>
+                    </div>
+                `;
+            } else {
+                // デフォルト: glassmorphism
+                rootContainer.className = 'skin-glassmorphism';
+                rootContainer.innerHTML = `
+                    <div class="hud-header">
+                        <span class="dot"></span>
+                        <span>PekoScore</span>
+                        <span class="dot"></span>
+                    </div>
+                    <div class="hud-counter">
+                        <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">勝</span>
+                        <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit last">敗</span>
+                    </div>
+                `;
+            }
+        }
+
+        async function fetchState() {
+            try {
+                const res = await fetch('/api/state');
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                const newWins = data.wins;
+                const newLosses = data.losses;
+                const newSkin = data.skin || 'glassmorphism';
+
+                // スキンが変わったら構造再構築
+                if (newSkin !== currentSkin) {
+                    currentSkin = newSkin;
+                    renderSkin(newSkin, newWins, newLosses);
+                }
+
+                // カラー設定反映
+                if (data.skin_colors && data.skin_colors[newSkin]) {
+                    applySkinColors(newSkin, data.skin_colors[newSkin]);
+                }
+
+                const winSpan = document.getElementById('win-count');
+                const lossSpan = document.getElementById('loss-count');
+
+                // アニメーション (数字単体ポップ)
+                if (currentWins !== -1) {
+                    if (newWins !== currentWins && data.animation_enabled && winSpan) {
+                        winSpan.classList.remove('anim-win-pop');
+                        void winSpan.offsetWidth;
+                        winSpan.classList.add('anim-win-pop');
+                    }
+                    if (newLosses !== currentLosses && data.animation_enabled && lossSpan) {
+                        lossSpan.classList.remove('anim-loss-pop');
+                        void lossSpan.offsetWidth;
+                        lossSpan.classList.add('anim-loss-pop');
+                    }
+                }
+
+                currentWins = newWins;
+                currentLosses = newLosses;
+                if (winSpan) winSpan.textContent = newWins;
+                if (lossSpan) lossSpan.textContent = newLosses;
+
+                // フォント・サイズ反映
+                if (data.font_family) {
+                    document.documentElement.style.setProperty('--font-family', `"${data.font_family}", 'Zen Maru Gothic', sans-serif`);
+                }
+                if (data.font_size) {
+                    document.documentElement.style.setProperty('--font-size', data.font_size + 'px');
+                }
+
+            } catch (e) {
+                // 通信エラー待機
+            }
+        }
+
+        function hexToRgba(hex, alpha) {
+            if (!hex || typeof hex !== 'string') return `rgba(0,0,0,${alpha})`;
+            let c = hex.replace('#', '');
+            if (c.length === 3) c = c[0]+c[0] + c[1]+c[1] + c[2]+c[2];
+            const num = parseInt(c, 16);
+            const r = (num >> 16) & 255;
+            const g = (num >> 8) & 255;
+            const b = num & 255;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function applySkinColors(skin, colors) {
+            const root = document.documentElement.style;
+            if (skin === 'glassmorphism') {
+                if (colors.bg) root.setProperty('--gm-bg', hexToRgba(colors.bg, 0.65));
+                if (colors.border) {
+                    root.setProperty('--gm-border', colors.border);
+                    root.setProperty('--gm-glow', hexToRgba(colors.border, 0.35));
+                }
+                if (colors.win) {
+                    root.setProperty('--gm-win', colors.win);
+                    root.setProperty('--gm-win-glow', hexToRgba(colors.win, 0.45));
+                }
+                if (colors.loss) {
+                    root.setProperty('--gm-loss', colors.loss);
+                    root.setProperty('--gm-loss-glow', hexToRgba(colors.loss, 0.45));
+                }
+            } else if (skin === 'badge') {
+                if (colors.top_bg) root.setProperty('--badge-top-bg', colors.top_bg);
+                if (colors.bot_bg) root.setProperty('--badge-bot-bg', colors.bot_bg);
+                if (colors.top_text) root.setProperty('--badge-top-text', colors.top_text);
+                if (colors.bot_text) root.setProperty('--badge-bot-text', colors.bot_text);
+            } else if (skin === 'ticket') {
+                if (colors.bg) root.setProperty('--ticket-bg', colors.bg);
+                if (colors.border) root.setProperty('--ticket-border', colors.border);
+                if (colors.win) root.setProperty('--ticket-win', colors.win);
+                if (colors.loss) root.setProperty('--ticket-loss', colors.loss);
+            } else if (skin === 'simple') {
+                if (colors.win) root.setProperty('--simple-win', colors.win);
+                if (colors.loss) root.setProperty('--simple-loss', colors.loss);
+                if (colors.unit) root.setProperty('--simple-unit', colors.unit);
+                if (colors.shadow) root.setProperty('--simple-shadow', colors.shadow);
+            }
+        }
+
+        setInterval(fetchState, 250);
+        fetchState();
+    </script>
+</body>
+</html>

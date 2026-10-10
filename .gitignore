@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ユーザーローカル設定 (勝敗数・個人カスタムカラー・ウィンドウ情報など)
+config.json
+
+# 開発用仮想環境
+.venv/
+venv/
+env/
+ENV/
+
+# ビルド・パッケージング成果物
+build/
+dist/
+*.spec
+
+# 一時テスト画像・ログ・下絵素材
+test_*.png
+test_*.jpg
+obs_matched_*.png
+preview_checker.png
+sidebar_icons.jpg
+サイドバー.jpg
+ぺこすこあ_icon.png
+*.log
+*.tmp
+
+# OS 一時ファイル
+Thumbs.db
+.DS_Store
+desktop.ini
