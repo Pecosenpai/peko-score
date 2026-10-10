@@ -716,7 +716,7 @@ class PekoScoreApp(ctk.CTk):
             path = os.path.join(get_resource_dir(), "help_content.json")
         default_content = {
             "app_info": {
-                "version": "Ver 1.0.0",
+                "version": "Ver 1.0.1",
                 "subtitle": "配信者向け対戦ゲーム専用\n勝敗自動カウントツール",
                 "credit": "Presented by ぺこぺこ堂\n(PekoPeko-Do)",
                 "contact_button_text": "お問い合わせ・ご要望",
@@ -737,7 +737,7 @@ class PekoScoreApp(ctk.CTk):
                     "a": "ブラウザソースURLが「http://127.0.0.1:8080/counter」になっているか、セキュリティソフト等で遮断されていないかご確認ください。"
                 }
             ],
-            "legal_text": "【権利表記】 Overwatch® は Blizzard Entertainment, Inc. の商標または登録商標です。本ツールは個人が制作した非公式のファンメイドツールであり、Blizzard Entertainment との提携・公認関係等にはありません。\n\n【免責事項】 本ツールの使用により生じたいかなるトラブル・損害も制作者は責任を負いかねます。各配信プラットフォーム等の規約を遵守してご利用ください。\n\n【フォント・UI】 Zen Maru Gothic (SIL OFL 1.1) / © 2026 ぺこぺこ堂"
+            "legal_text": "【権利表記】\n本ツールで検知対象としている各ゲームタイトルの商標・知的財産権は、それぞれの権利元に帰属します。\n本ツールは個人が制作した非公式のファンメイドツールであり、各ゲーム会社様との提携・公認関係等はありません。\n\n【免責事項】\n本ツールの使用により生じたいかなるトラブル・損害も制作者は責任を負いかねます。各配信プラットフォーム等の規約を遵守してご利用ください。\n\n【フォント・UI】\nZen Maru Gothic (SIL OFL 1.1) / © 2026 ぺこぺこ堂"
         }
         if os.path.exists(path):
             try:
