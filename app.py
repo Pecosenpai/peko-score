@@ -1,6 +1,7 @@
 import sys
 import os
 import copy
+import queue
 import webbrowser
 import tkinter as tk
 from tkinter import font as tkFont, messagebox, colorchooser
@@ -25,6 +26,7 @@ from skin_presets_manager import (
     DEFAULT_SKIN_COLORS, SKIN_COLOR_LABELS,
     normalize_config_colors, get_default_colors
 )
+import updater
 
 # ぺこぺこ堂カラーパレット (ライト / ダーク両対応)
 COLOR_BG_IVORY = ("#F6F7F2", "#181C19")       # 全体背景 (温かみのあるアイボリー / 深いフォレストブラック)
@@ -167,6 +169,9 @@ class PekoScoreApp(ctk.CTk):
         self.port = start_server(self.app_state, port=8080)
         self.obs_url = f"http://127.0.0.1:{self.port}/counter"
 
+        # アップデート通知キュー (スレッドセーフ)
+        self.update_result_queue = queue.Queue()
+
         # 自動検知サービス初期化
         base_dir = os.path.dirname(os.path.abspath(__file__))
         templates_dir = os.path.join(base_dir, "samples", "templates")
@@ -201,6 +206,9 @@ class PekoScoreApp(ctk.CTk):
 
         # 定期的なUI同期 (100msごと)
         self.update_ui_loop()
+
+        # 起動時のサイレント・アップデート確認 (2秒後)
+        self.after(2000, self.silent_check_for_updates)
 
     def setup_sidebar(self):
         # 左サイドバー
@@ -738,6 +746,146 @@ class PekoScoreApp(ctk.CTk):
         except Exception as e:
             self.log(f"フォームを開けませんでした: {e}")
 
+    def on_check_update_clicked(self):
+        if hasattr(self, "btn_check_update") and self.btn_check_update.winfo_exists():
+            self.btn_check_update.configure(text="確認中...", state="disabled")
+        if hasattr(self, "lbl_update_status") and self.lbl_update_status.winfo_exists():
+            self.lbl_update_status.configure(text="")
+
+        updater.check_for_updates_async(lambda res: self.update_result_queue.put((res, True)))
+
+    def silent_check_for_updates(self):
+        updater.check_for_updates_async(lambda res: self.update_result_queue.put((res, False)))
+
+    def on_update_result_received(self, res, user_initiated=True):
+        if hasattr(self, "btn_check_update") and self.btn_check_update.winfo_exists():
+            self.btn_check_update.configure(text="アップデートを確認", state="normal")
+
+        if not res.get("success"):
+            if user_initiated:
+                if hasattr(self, "lbl_update_status") and self.lbl_update_status.winfo_exists():
+                    self.lbl_update_status.configure(text="確認に失敗しました", text_color=COLOR_TEXT_MUTED)
+                self.log(f"アップデート確認エラー: {res.get('error')}")
+            return
+
+        if res.get("has_update"):
+            latest_v = res.get("latest_version")
+            if hasattr(self, "lbl_update_status") and self.lbl_update_status.winfo_exists():
+                self.lbl_update_status.configure(text=f"🎉 {latest_v} が利用可能！", text_color=COLOR_SAGE_GREEN)
+            self.log(f"新バージョンが見つかりました: {latest_v}")
+            if hasattr(self, "btn_nav_help") and self.btn_nav_help.winfo_exists():
+                self.btn_nav_help.configure(text=" ヘルプ ●")
+            if user_initiated:
+                self.show_update_modal(res)
+        else:
+            if user_initiated:
+                if hasattr(self, "lbl_update_status") and self.lbl_update_status.winfo_exists():
+                    self.lbl_update_status.configure(text="最新バージョンです", text_color=COLOR_TEXT_MUTED)
+                self.log("アプリは最新バージョンです")
+
+    def show_update_modal(self, res):
+        dlg = ctk.CTkToplevel(self)
+        dlg.title("ぺこすこあ アップデート")
+        dlg.geometry("440x370")
+        dlg.resizable(False, False)
+        dlg.transient(self)
+        dlg.grab_set()
+
+        # ヘッダー
+        ctk.CTkLabel(
+            dlg, text="🎉 新しいバージョンが見つかりました！",
+            font=ctk.CTkFont(family="Meiryo UI", size=15, weight="bold"),
+            text_color=COLOR_SAGE_GREEN
+        ).pack(pady=(18, 4))
+
+        latest_v = res.get("latest_version", "")
+        cur_v = res.get("current_version", updater.CURRENT_VERSION)
+        ctk.CTkLabel(
+            dlg, text=f"現在: {cur_v}  ➜  最新: {latest_v}",
+            font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"),
+            text_color=COLOR_TEXT_MAIN
+        ).pack(pady=(0, 10))
+
+        # 更新内容テキストボックス
+        notes_box = ctk.CTkTextbox(dlg, width=380, height=130, font=ctk.CTkFont(family="Meiryo UI", size=11))
+        notes_box.pack(padx=20, pady=(0, 10))
+        notes_box.insert("1.0", res.get("release_notes", "更新内容はありません。"))
+        notes_box.configure(state="disabled")
+
+        # プログレスバー & ステータス
+        lbl_prog = ctk.CTkLabel(dlg, text="", font=ctk.CTkFont(family="Meiryo UI", size=11), text_color=COLOR_TEXT_MUTED)
+        prog_bar = ctk.CTkProgressBar(dlg, width=380, progress_color=COLOR_SAGE_GREEN)
+        prog_bar.set(0)
+
+        btn_frame = ctk.CTkFrame(dlg, fg_color="transparent")
+        btn_frame.pack(fill="x", padx=20, pady=(6, 16))
+
+        def start_download():
+            dl_url = res.get("download_url")
+            if not dl_url:
+                webbrowser.open(res.get("html_url", ""))
+                dlg.destroy()
+                return
+
+            btn_update.configure(state="disabled")
+            btn_browser.configure(state="disabled")
+            lbl_prog.pack(pady=(0, 4))
+            prog_bar.pack(pady=(0, 8))
+            lbl_prog.configure(text="最新版をダウンロード中...")
+
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+
+            prog_queue = queue.Queue()
+            def on_progress(p):
+                prog_queue.put((p, None))
+            def on_err(err_msg):
+                prog_queue.put((None, err_msg))
+
+            updater.download_and_install_update(dl_url, base_dir, on_progress, on_err)
+
+            def poll_progress():
+                try:
+                    while not prog_queue.empty():
+                        p, err = prog_queue.get_nowait()
+                        if err:
+                            lbl_prog.configure(text=f"エラー: {err}", text_color="#D9534F")
+                            btn_browser.configure(state="normal")
+                        elif p is not None:
+                            prog_bar.set(p)
+                            pct = int(p * 100)
+                            lbl_prog.configure(text=f"ダウンロード中... {pct}%" if p < 1.0 else "更新を適用して再起動します...")
+                except Exception:
+                    pass
+                if dlg.winfo_exists():
+                    dlg.after(100, poll_progress)
+
+            dlg.after(100, poll_progress)
+
+        btn_update = ctk.CTkButton(
+            btn_frame, text="今すぐ自動更新",
+            font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"),
+            fg_color=COLOR_SAGE_GREEN, hover_color=COLOR_SAGE_HOVER,
+            command=start_download
+        )
+        btn_update.pack(side="left", expand=True, fill="x", padx=(0, 6))
+
+        btn_browser = ctk.CTkButton(
+            btn_frame, text="GitHubで確認",
+            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            fg_color="transparent", text_color=COLOR_TEXT_MAIN,
+            border_width=1, border_color=COLOR_CARD_BORDER,
+            command=lambda: webbrowser.open(res.get("html_url", ""))
+        )
+        btn_browser.pack(side="left", padx=(0, 6))
+
+        btn_close = ctk.CTkButton(
+            btn_frame, text="閉じる",
+            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            fg_color="transparent", text_color=COLOR_TEXT_MUTED,
+            width=60, command=dlg.destroy
+        )
+        btn_close.pack(side="left")
+
     def setup_help_view(self):
         # ヘルプ & アプリ情報 画面
         self.view_help = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
@@ -860,7 +1008,29 @@ class PekoScoreApp(ctk.CTk):
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             text_color=COLOR_TEXT_MUTED
         )
-        lbl_form_hint.pack(pady=(0, 10))
+        lbl_form_hint.pack(pady=(0, 8))
+
+        # アップデート確認ボタン & ステータス
+        self.btn_check_update = ctk.CTkButton(
+            card_left,
+            text="アップデートを確認",
+            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            fg_color=("#E5ECE7", "#323B34"),
+            text_color=COLOR_TEXT_MAIN,
+            hover_color=COLOR_NAV_HOVER,
+            height=30,
+            corner_radius=8,
+            command=self.on_check_update_clicked
+        )
+        self.btn_check_update.pack(fill="x", padx=14, pady=(0, 2))
+
+        self.lbl_update_status = ctk.CTkLabel(
+            card_left,
+            text="",
+            font=ctk.CTkFont(family="Meiryo UI", size=10),
+            text_color=COLOR_TEXT_MUTED
+        )
+        self.lbl_update_status.pack(pady=(0, 6))
 
         # ----------------------------------------------------
         # 右カラム: FAQ & 権利表記 (横幅を広く確保 + 動的自動折り返し)
@@ -1396,6 +1566,14 @@ class PekoScoreApp(ctk.CTk):
 
         # ヘルプファイルのホットリロード監視
         self.check_help_content_reload()
+
+        # アップデート確認結果の反映 (スレッドセーフ)
+        while hasattr(self, "update_result_queue") and not self.update_result_queue.empty():
+            try:
+                res, user_init = self.update_result_queue.get_nowait()
+                self.on_update_result_received(res, user_initiated=user_init)
+            except Exception:
+                break
 
         self.after(100, self.update_ui_loop)
 
