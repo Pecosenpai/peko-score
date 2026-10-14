@@ -786,7 +786,8 @@ class PekoScoreApp(ctk.CTk):
         return default_content
 
     def open_user_manual(self):
-        manual_url = f"http://127.0.0.1:{self.server_port}/manual"
+        port = getattr(self, "port", 8080) or 8080
+        manual_url = f"http://127.0.0.1:{port}/manual"
         try:
             webbrowser.open(manual_url)
             self.log("操作マニュアルをブラウザで開きました")
@@ -1690,46 +1691,71 @@ class PekoScoreApp(ctk.CTk):
 
     def _build_single_sound_row(self, parent, label_text, file_key, vol_key, sound_type):
         row_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        row_frame.pack(fill="x", pady=4)
+        row_frame.pack(fill="x", pady=3)
 
         # ラベル
         ctk.CTkLabel(
-            row_frame, text=label_text, width=70, anchor="w",
+            row_frame, text=label_text, width=64, anchor="w",
             font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         ).pack(side="left")
 
-        # ファイル名表示
+        # ファイル名表示 (最大12文字程度で省略表示)
         cur_file = self.config.get(file_key, "")
-        display_name = os.path.basename(cur_file) if cur_file else "デフォルト音"
+        raw_name = os.path.basename(cur_file) if cur_file else "デフォルト音"
+        disp_name = (raw_name[:12] + "...") if len(raw_name) > 13 else raw_name
         lbl_file = ctk.CTkLabel(
-            row_frame, text=display_name, width=140, anchor="w",
+            row_frame, text=disp_name, width=88, anchor="w",
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             text_color=COLOR_TEXT_MUTED
         )
-        lbl_file.pack(side="left", padx=(0, 6))
+        lbl_file.pack(side="left", padx=(0, 4))
 
         # ファイル参照ボタン
         def choose_file():
+            # 初期フォルダとして同梱の sounds ディレクトリを開く
+            res_dir = get_resource_dir()
+            init_dir = os.path.join(res_dir, "sounds")
+            if not os.path.exists(init_dir):
+                init_dir = os.path.join(get_app_dir(), "sounds")
+            if not os.path.exists(init_dir):
+                init_dir = None
+
             path = filedialog.askopenfilename(
                 title=f"{label_text} 音声ファイルの選択",
+                initialdir=init_dir,
                 filetypes=[("音声ファイル", "*.wav;*.mp3;*.ogg"), ("すべてのファイル", "*.*")]
             )
             if path:
                 self.config[file_key] = path
                 save_config(self.config)
-                lbl_file.configure(text=os.path.basename(path))
-                self.log(f"{label_text} ファイルを設定: {os.path.basename(path)}")
+                bname = os.path.basename(path)
+                lbl_file.configure(text=(bname[:12] + "...") if len(bname) > 13 else bname)
+                self.log(f"{label_text} ファイルを設定: {bname}")
 
         btn_browse = ctk.CTkButton(
-            row_frame, text="参照...", width=58, height=26,
+            row_frame, text="参照...", width=50, height=24,
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             fg_color=COLOR_SAGE_LIGHT, text_color=COLOR_TEXT_MAIN,
             hover_color=COLOR_NAV_HOVER, command=choose_file
         )
         btn_browse.pack(side="left", padx=(0, 4))
 
-        # デフォルトに戻すボタン (カスタム設定時のみ有効化)
+        # 試聴ボタン (参照のすぐ隣に配置して目立たせる)
+        def test_play():
+            f_path = self.config.get(file_key, "")
+            v = float(self.config.get(vol_key, 70)) / 100.0
+            sound_service.play_sound(file_path=f_path, sound_type=sound_type, volume=v)
+
+        btn_play = ctk.CTkButton(
+            row_frame, text="▶ 試聴", width=52, height=24,
+            font=ctk.CTkFont(family="Meiryo UI", size=11, weight="bold"),
+            fg_color=COLOR_SAGE_GREEN, hover_color=COLOR_SAGE_HOVER,
+            command=test_play
+        )
+        btn_play.pack(side="left", padx=(0, 4))
+
+        # デフォルトに戻すボタン
         def reset_to_default():
             self.config[file_key] = ""
             save_config(self.config)
@@ -1737,17 +1763,17 @@ class PekoScoreApp(ctk.CTk):
             self.log(f"{label_text} をデフォルト音に戻しました")
 
         btn_default = ctk.CTkButton(
-            row_frame, text="初期化", width=50, height=26,
-            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            row_frame, text="初期化", width=44, height=24,
+            font=ctk.CTkFont(family="Meiryo UI", size=10),
             fg_color="transparent", text_color=COLOR_TEXT_MUTED,
             hover_color=COLOR_NAV_HOVER, command=reset_to_default
         )
-        btn_default.pack(side="left", padx=(0, 10))
+        btn_default.pack(side="left", padx=(0, 6))
 
         # 音量ラベル & スライダー
         cur_vol = int(self.config.get(vol_key, 70))
         lbl_vol_val = ctk.CTkLabel(
-            row_frame, text=f"音量: {cur_vol}%", width=62, anchor="w",
+            row_frame, text=f"{cur_vol}%", width=36, anchor="e",
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             text_color=COLOR_TEXT_MUTED
         )
@@ -1755,30 +1781,16 @@ class PekoScoreApp(ctk.CTk):
 
         def on_vol_change(val):
             val_int = int(val)
-            lbl_vol_val.configure(text=f"音量: {val_int}%")
+            lbl_vol_val.configure(text=f"{val_int}%")
             self.config[vol_key] = val_int
             save_config(self.config)
 
         vol_slider = ctk.CTkSlider(
-            row_frame, from_=0, to=100, number_of_steps=20, width=110,
+            row_frame, from_=0, to=100, number_of_steps=20, width=90,
             command=on_vol_change
         )
         vol_slider.set(cur_vol)
-        vol_slider.pack(side="left", padx=(0, 10))
-
-        # 試聴ボタン
-        def test_play():
-            f_path = self.config.get(file_key, "")
-            v = float(self.config.get(vol_key, 70)) / 100.0
-            sound_service.play_sound(file_path=f_path, sound_type=sound_type, volume=v)
-
-        btn_play = ctk.CTkButton(
-            row_frame, text="▶ 試聴", width=54, height=26,
-            font=ctk.CTkFont(family="Meiryo UI", size=11),
-            fg_color=COLOR_SAGE_GREEN, hover_color=COLOR_SAGE_HOVER,
-            command=test_play
-        )
-        btn_play.pack(side="left")
+        vol_slider.pack(side="left")
 
     def on_detect_result(self, result_type, msg):
         self.after(0, lambda: self.log(msg))
