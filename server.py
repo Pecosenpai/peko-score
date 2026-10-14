@@ -82,6 +82,9 @@ class OBSServerHandler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/" or self.path == "/counter":
             self.path = "/index.html"
             return super().do_GET()
+        elif self.path == "/manual":
+            self.path = "/manual.html"
+            return super().do_GET()
         else:
             return super().do_GET()
 

@@ -785,6 +785,19 @@ class PekoScoreApp(ctk.CTk):
                     return self._cached_help_data
         return default_content
 
+    def open_user_manual(self):
+        manual_url = f"http://127.0.0.1:{self.server_port}/manual"
+        try:
+            webbrowser.open(manual_url)
+            self.log("操作マニュアルをブラウザで開きました")
+        except Exception as e:
+            # フォールバック: 直接ファイルをブラウザで開く
+            res_dir = get_resource_dir()
+            fallback_path = os.path.join(res_dir, "web", "manual.html")
+            if os.path.exists(fallback_path):
+                webbrowser.open(f"file://{os.path.abspath(fallback_path)}")
+            self.log(f"マニュアルを開きました: {e}")
+
     def open_feedback_form(self):
         help_data = self.load_help_content()
         url = help_data.get("app_info", {}).get("contact_url", "https://forms.gle/dummy")
@@ -1051,23 +1064,37 @@ class PekoScoreApp(ctk.CTk):
         )
         lbl_credit.pack(pady=(0, 14))
 
-        # お問い合わせボタン
-        btn_form = ctk.CTkButton(
+        # 操作マニュアルを開くボタン
+        btn_manual = ctk.CTkButton(
             card_left,
-            text=app_info.get("contact_button_text", "お問い合わせ・ご要望"),
+            text="操作マニュアルを開く",
             font=ctk.CTkFont(family="Meiryo UI", size=11, weight="bold"),
             fg_color=COLOR_SAGE_GREEN,
             hover_color=COLOR_SAGE_HOVER,
             height=34,
             corner_radius=8,
+            command=self.open_user_manual
+        )
+        btn_manual.pack(fill="x", padx=14, pady=(0, 8))
+
+        # お問い合わせボタン
+        btn_form = ctk.CTkButton(
+            card_left,
+            text=app_info.get("contact_button_text", "お問い合わせ・ご要望"),
+            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            fg_color=("#E5ECE7", "#323B34"),
+            text_color=COLOR_TEXT_MAIN,
+            hover_color=COLOR_NAV_HOVER,
+            height=30,
+            corner_radius=8,
             command=self.open_feedback_form
         )
-        btn_form.pack(fill="x", padx=14, pady=(0, 4))
+        btn_form.pack(fill="x", padx=14, pady=(0, 2))
 
         lbl_form_hint = ctk.CTkLabel(
             card_left,
             text=app_info.get("contact_hint", "※Googleフォームが開きます"),
-            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            font=ctk.CTkFont(family="Meiryo UI", size=10),
             text_color=COLOR_TEXT_MUTED
         )
         lbl_form_hint.pack(pady=(0, 8))
