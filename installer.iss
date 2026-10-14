@@ -1,5 +1,5 @@
 #define MyAppName "ぺこすこあ"
-#define MyAppVersion "1.0.4"
+#define MyAppVersion "1.0.5"
 #define MyAppPublisher "ぺこぺこ堂"
 #define MyAppURL "https://github.com/Pecosenpai/peko-score"
 #define MyAppExeName "PekoScore.exe"
@@ -8,6 +8,7 @@
 AppId={{E681C3D8-7B84-48E1-9AE9-482026PEKO01}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
+UninstallDisplayName={#MyAppName}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
@@ -16,7 +17,7 @@ DefaultDirName={autopf}\PekoScore
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=dist_installer
-OutputBaseFilename=PekoScore-Setup-v1.0.4
+OutputBaseFilename=PekoScore-Setup-v1.0.5
 SetupIconFile=icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes

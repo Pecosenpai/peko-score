@@ -24,7 +24,15 @@ DEFAULT_CONFIG = {
     "hotkey_loss": "f8",
     "hotkey_undo": "ctrl+shift+z",
     "hotkey_reset": "ctrl+shift+r",
-    "hotkeys_enabled": True
+    "hotkeys_enabled": True,
+    "sound_enabled": True,
+    "sound_separate_win_loss": True,
+    "sound_notify_file": "",
+    "sound_notify_volume": 70,
+    "sound_win_file": "",
+    "sound_win_volume": 70,
+    "sound_loss_file": "",
+    "sound_loss_volume": 70
 }
 
 def load_config():

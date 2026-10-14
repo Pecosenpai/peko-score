@@ -4,7 +4,7 @@ import copy
 import queue
 import webbrowser
 import tkinter as tk
-from tkinter import font as tkFont, messagebox, colorchooser
+from tkinter import font as tkFont, messagebox, colorchooser, filedialog
 import customtkinter as ctk
 from PIL import Image, ImageTk
 import ctypes
@@ -27,6 +27,7 @@ from skin_presets_manager import (
     normalize_config_colors, get_default_colors
 )
 import updater
+import sound_service
 
 # ぺこぺこ堂カラーパレット (ライト / ダーク両対応)
 COLOR_BG_IVORY = ("#F6F7F2", "#181C19")       # 全体背景 (温かみのあるアイボリー / 深いフォレストブラック)
@@ -703,12 +704,44 @@ class PekoScoreApp(ctk.CTk):
         self.mon_combo.set(current_mon_key)
         self.mon_combo.pack(side="left")
 
+        # --- 効果音 (SE) 設定セクション ---
+        sound_divider = ctk.CTkFrame(set_card, height=1, fg_color=COLOR_CARD_BORDER)
+        sound_divider.pack(fill="x", padx=20, pady=(16, 12))
+
+        # SEマスター有効化スイッチ
+        self.switch_sound = ctk.CTkSwitch(
+            set_card, text="勝敗自動検知時に効果音 (SE) を鳴らす",
+            font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
+            progress_color=COLOR_SAGE_GREEN, command=self.on_sound_toggle
+        )
+        self.switch_sound.select() if self.config.get("sound_enabled", True) else self.switch_sound.deselect()
+        self.switch_sound.pack(anchor="w", padx=20, pady=(4, 6))
+
+        # SE全体コンテナ枠
+        self.sound_options_box = ctk.CTkFrame(set_card, fg_color="transparent")
+        self.sound_options_box.pack(fill="x", padx=20, pady=(0, 10))
+
+        # 勝敗別トグル
+        self.switch_separate = ctk.CTkSwitch(
+            self.sound_options_box, text="勝敗に応じて音を変える",
+            font=ctk.CTkFont(family="Meiryo UI", size=12),
+            progress_color=COLOR_SAGE_GREEN, command=self.on_separate_sound_toggle
+        )
+        self.switch_separate.select() if self.config.get("sound_separate_win_loss", True) else self.switch_separate.deselect()
+        self.switch_separate.pack(anchor="w", padx=0, pady=(4, 10))
+
+        # 動的切り替えコンテナ (共通モード / 個別モード)
+        self.sound_controls_frame = ctk.CTkFrame(self.sound_options_box, fg_color="transparent")
+        self.sound_controls_frame.pack(fill="x", padx=0, pady=0)
+
+        self.rebuild_sound_controls()
+
         lbl_desc = ctk.CTkLabel(
             set_card, 
-            text="・【外観テーマ】作業環境やお好みに応じてライト／ダークを瞬時に切り替えられます。\n・【自動追従】ゲーム画面がサブモニターにあっても自動で判定します。\n・色覚サポートやカスタムUIカラー変更でも高精度に自動判定可能です。\n・多重カウント防止のため、検知後は25秒間のクールダウンが入ります。",
+            text="・【外観テーマ】作業環境やお好みに応じてライト／ダークを瞬時に切り替えられます。\n・【効果音(SE)】検知時に通知音でお知らせします。お好きな音声ファイル(.wav/.mp3等)も指定可能です。\n・【自動追従】ゲーム画面がサブモニターにあっても自動で判定します。\n・多重カウント防止のため、検知後は25秒間のクールダウンが入ります。",
             font=ctk.CTkFont(family="Meiryo UI", size=12), text_color=COLOR_TEXT_MUTED, justify="left"
         )
-        lbl_desc.pack(anchor="w", padx=20, pady=(16, 20))
+        lbl_desc.pack(anchor="w", padx=20, pady=(12, 16))
 
     def load_help_content(self):
         path = os.path.join(get_app_dir(), "help_content.json")
@@ -1578,8 +1611,166 @@ class PekoScoreApp(ctk.CTk):
         self.clipboard_append(self.obs_url)
         messagebox.showinfo("コピー完了", f"OBS用URLをクリップボードにコピーしました！\n{self.obs_url}")
 
+    def on_sound_toggle(self):
+        enabled = self.switch_sound.get() == 1
+        self.config["sound_enabled"] = enabled
+        save_config(self.config)
+        if enabled:
+            self.sound_options_box.pack(fill="x", padx=20, pady=(0, 10))
+        else:
+            self.sound_options_box.pack_forget()
+        self.log(f"効果音(SE): {'有効' if enabled else '無効'}")
+
+    def on_separate_sound_toggle(self):
+        is_sep = self.switch_separate.get() == 1
+        self.config["sound_separate_win_loss"] = is_sep
+        save_config(self.config)
+        self.rebuild_sound_controls()
+        self.log(f"勝敗別SE: {'有効' if is_sep else '共通音'}")
+
+    def rebuild_sound_controls(self):
+        # 既存コントロール消去
+        for child in self.sound_controls_frame.winfo_children():
+            child.destroy()
+
+        is_sep = self.config.get("sound_separate_win_loss", True)
+        
+        if not is_sep:
+            # 共通モード
+            self._build_single_sound_row(
+                self.sound_controls_frame,
+                label_text="通知SE:",
+                file_key="sound_notify_file",
+                vol_key="sound_notify_volume",
+                sound_type="notify"
+            )
+        else:
+            # 勝敗個別モード
+            self._build_single_sound_row(
+                self.sound_controls_frame,
+                label_text="勝利時SE:",
+                file_key="sound_win_file",
+                vol_key="sound_win_volume",
+                sound_type="victory"
+            )
+            self._build_single_sound_row(
+                self.sound_controls_frame,
+                label_text="敗北時SE:",
+                file_key="sound_loss_file",
+                vol_key="sound_loss_volume",
+                sound_type="defeat"
+            )
+
+    def _build_single_sound_row(self, parent, label_text, file_key, vol_key, sound_type):
+        row_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        row_frame.pack(fill="x", pady=4)
+
+        # ラベル
+        ctk.CTkLabel(
+            row_frame, text=label_text, width=70, anchor="w",
+            font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"),
+            text_color=COLOR_TEXT_MAIN
+        ).pack(side="left")
+
+        # ファイル名表示
+        cur_file = self.config.get(file_key, "")
+        display_name = os.path.basename(cur_file) if cur_file else "デフォルト音"
+        lbl_file = ctk.CTkLabel(
+            row_frame, text=display_name, width=140, anchor="w",
+            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            text_color=COLOR_TEXT_MUTED
+        )
+        lbl_file.pack(side="left", padx=(0, 6))
+
+        # ファイル参照ボタン
+        def choose_file():
+            path = filedialog.askopenfilename(
+                title=f"{label_text} 音声ファイルの選択",
+                filetypes=[("音声ファイル", "*.wav;*.mp3;*.ogg"), ("すべてのファイル", "*.*")]
+            )
+            if path:
+                self.config[file_key] = path
+                save_config(self.config)
+                lbl_file.configure(text=os.path.basename(path))
+                self.log(f"{label_text} ファイルを設定: {os.path.basename(path)}")
+
+        btn_browse = ctk.CTkButton(
+            row_frame, text="参照...", width=58, height=26,
+            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            fg_color=COLOR_SAGE_LIGHT, text_color=COLOR_TEXT_MAIN,
+            hover_color=COLOR_NAV_HOVER, command=choose_file
+        )
+        btn_browse.pack(side="left", padx=(0, 4))
+
+        # デフォルトに戻すボタン (カスタム設定時のみ有効化)
+        def reset_to_default():
+            self.config[file_key] = ""
+            save_config(self.config)
+            lbl_file.configure(text="デフォルト音")
+            self.log(f"{label_text} をデフォルト音に戻しました")
+
+        btn_default = ctk.CTkButton(
+            row_frame, text="初期化", width=50, height=26,
+            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            fg_color="transparent", text_color=COLOR_TEXT_MUTED,
+            hover_color=COLOR_NAV_HOVER, command=reset_to_default
+        )
+        btn_default.pack(side="left", padx=(0, 10))
+
+        # 音量ラベル & スライダー
+        cur_vol = int(self.config.get(vol_key, 70))
+        lbl_vol_val = ctk.CTkLabel(
+            row_frame, text=f"音量: {cur_vol}%", width=62, anchor="w",
+            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            text_color=COLOR_TEXT_MUTED
+        )
+        lbl_vol_val.pack(side="left", padx=(0, 4))
+
+        def on_vol_change(val):
+            val_int = int(val)
+            lbl_vol_val.configure(text=f"音量: {val_int}%")
+            self.config[vol_key] = val_int
+            save_config(self.config)
+
+        vol_slider = ctk.CTkSlider(
+            row_frame, from_=0, to=100, number_of_steps=20, width=110,
+            command=on_vol_change
+        )
+        vol_slider.set(cur_vol)
+        vol_slider.pack(side="left", padx=(0, 10))
+
+        # 試聴ボタン
+        def test_play():
+            f_path = self.config.get(file_key, "")
+            v = float(self.config.get(vol_key, 70)) / 100.0
+            sound_service.play_sound(file_path=f_path, sound_type=sound_type, volume=v)
+
+        btn_play = ctk.CTkButton(
+            row_frame, text="▶ 試聴", width=54, height=26,
+            font=ctk.CTkFont(family="Meiryo UI", size=11),
+            fg_color=COLOR_SAGE_GREEN, hover_color=COLOR_SAGE_HOVER,
+            command=test_play
+        )
+        btn_play.pack(side="left")
+
     def on_detect_result(self, result_type, msg):
         self.after(0, lambda: self.log(msg))
+        # 勝敗検知時のSE再生
+        if self.config.get("sound_enabled", True) and result_type in ("win", "loss"):
+            is_sep = self.config.get("sound_separate_win_loss", True)
+            if is_sep:
+                if result_type == "win":
+                    f_path = self.config.get("sound_win_file", "")
+                    vol = float(self.config.get("sound_win_volume", 70)) / 100.0
+                    sound_service.play_sound(file_path=f_path, sound_type="victory", volume=vol)
+                else:
+                    f_path = self.config.get("sound_loss_file", "")
+                    vol = float(self.config.get("sound_loss_volume", 70)) / 100.0
+                    sound_service.play_sound(file_path=f_path, sound_type="defeat", volume=vol)
+            else:
+                f_path = self.config.get("sound_notify_file", "")
+                vol = float(self.config.get("sound_notify_volume", 70)) / 100.0
+                sound_service.play_sound(file_path=f_path, sound_type="notify", volume=vol)
 
     def log(self, text):
         self.log_label.configure(text=f"ログ: {text}")
