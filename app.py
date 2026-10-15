@@ -1795,10 +1795,14 @@ class PekoScoreApp(ctk.CTk):
     def on_detect_result(self, result_type, msg):
         self.after(0, lambda: self.log(msg))
         # 勝敗検知時のSE再生
-        if self.config.get("sound_enabled", True) and result_type in ("win", "loss"):
+        r_type = str(result_type).upper()
+        is_win = r_type in ("VICTORY", "WIN")
+        is_loss = r_type in ("DEFEAT", "LOSS")
+
+        if self.config.get("sound_enabled", True) and (is_win or is_loss):
             is_sep = self.config.get("sound_separate_win_loss", True)
             if is_sep:
-                if result_type == "win":
+                if is_win:
                     f_path = self.config.get("sound_win_file", "")
                     vol = float(self.config.get("sound_win_volume", 70)) / 100.0
                     sound_service.play_sound(file_path=f_path, sound_type="victory", volume=vol)

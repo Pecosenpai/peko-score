@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ぺこすこあ 利用説明書 (マニュアル)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #F7F9F6;
+      --card-bg: #FFFFFF;
+      --primary: #5F8D75;
+      --primary-light: #EBF2ED;
+      --primary-dark: #4A705C;
+      --text-main: #2D3732;
+      --text-muted: #66786E;
+      --border: #E2E8E4;
+      --accent: #E88D67;
+      --win-color: #5E9C7E;
+      --loss-color: #D87A6E;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Zen Maru Gothic', 'Meiryo UI', 'Yu Gothic UI', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.75;
+      padding: 40px 20px 80px 20px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ヘッダー */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px 20px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(95, 141, 117, 0.06);
+    }
+
+    .brand-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+    }
+
+    .brand-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .brand-credit {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 4px 14px;
+      border-radius: 20px;
+    }
+
+    /* 目次カード */
+    .toc-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 24px 28px;
+      margin-bottom: 36px;
+    }
+
+    .toc-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 14px;
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 6px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 8px 16px;
+    }
+
+    .toc-list a {
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.15s ease;
+      display: inline-block;
+    }
+
+    .toc-list a:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    /* セクション */
+    section {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 32px;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 18px;
+      padding-left: 12px;
+      border-left: 4px solid var(--primary);
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 14px;
+      margin-bottom: 14px;
+      color: var(--text-main);
+    }
+
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 14px;
+      font-size: 14px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    /* コールアウト / メモ枠 */
+    .callout {
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      border-radius: 0 10px 10px 0;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13px;
+      color: var(--text-main);
+    }
+
+    .callout strong {
+      color: var(--primary-dark);
+    }
+
+    /* コード・URL枠 */
+    .code-pill {
+      display: inline-block;
+      background: #EEF2EE;
+      color: var(--primary-dark);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      border: 1px solid #DCE3DE;
+    }
+
+    .url-box {
+      background: #2D3732;
+      color: #E8EFEA;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0 16px 0;
+    }
+
+    /* ステップカード */
+    .step-list {
+      list-style: none;
+      counter-reset: step-counter;
+      padding-left: 0;
+      margin-top: 14px;
+    }
+
+    .step-item {
+      position: relative;
+      padding-left: 42px;
+      margin-bottom: 18px;
+    }
+
+    .step-item::before {
+      counter-increment: step-counter;
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      color: #FFF;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 28px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* Q&Aカード */
+    .qa-item {
+      background: #FAFCFA;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+
+    .qa-q {
+      font-weight: 700;
+      color: var(--primary-dark);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .qa-a {
+      font-size: 13px;
+      color: var(--text-main);
+      margin-bottom: 0;
+    }
+
+    /* フッター */
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- ヘッダー -->
+    <header>
+      <div class="brand-title">ぺこすこあ 利用説明書</div>
+      <div class="brand-subtitle">配信者向け対戦ゲーム専用 勝敗自動カウントツール</div>
+      <div class="brand-credit">制作: ぺこぺこ堂 (PekoPeko-Do)</div>
+    </header>
+
+    <!-- 目次 -->
+    <nav class="toc-card">
+      <div class="toc-title">目次</div>
+      <ul class="toc-list">
+        <li><a href="#about">1. 概要</a></li>
+        <li><a href="#install">2. 導入方法 (インストール)</a></li>
+        <li><a href="#obs">3. 初期設定 (OBS連携)</a></li>
+        <li><a href="#basic">4. 基本的な使い方</a></li>
+        <li><a href="#customize">5. OBSスキンのカスタマイズ</a></li>
+        <li><a href="#settings">6. 環境設定 & 効果音 (SE)</a></li>
+        <li><a href="#update">7. アップデート手順</a></li>
+        <li><a href="#uninstall">8. アンインストール手順</a></li>
+        <li><a href="#troubleshooting">9. よくある質問 (FAQ)</a></li>
+        <li><a href="#legal">10. 権利表記 & 免責事項</a></li>
+      </ul>
+    </nav>
+
+    <!-- 1. 概要 -->
+    <section id="about">
+      <h2>1. 概要</h2>
+      <p>「ぺこすこあ」は、ゲーム画面の勝利・敗北を自動認識してカウントし、OBS Studio などの配信画面へリアルタイムにスコアを表示する配信者専用のデスクトップツールです。</p>
+      <ul>
+        <li>ゲーム画面の勝敗（VICTORY / DEFEAT）をリアルタイム自動検知</li>
+        <li>OBS Studio のブラウザソースと連動した、弾むアニメーション表示</li>
+        <li>ゲーム操作を妨げないショートカットキー手動操作（取り消し・リセット対応）</li>
+        <li>検知成功時に耳で分かる効果音（SE）通知機能（勝敗別の音量調整に対応）</li>
+        <li>ボタンひとつで最新バージョンへ更新できる自動アップデート機能</li>
+      </ul>
+    </section>
+
+    <!-- 2. 導入方法 -->
+    <section id="install">
+      <h2>2. 導入方法 (インストール手順)</h2>
+      
+      <h3>インストーラー版 (推奨)</h3>
+      <ol class="step-list">
+        <li class="step-item">
+          配布ファイル <strong>PekoScore-Setup-vX.X.X.exe</strong> を実行します。
+        </li>
+        <li class="step-item">
+          画面の案内に従って「次へ」進みます（デスクトップにショートカットを作成しておくと次回からの起動が便利です）。
+        </li>
+        <li class="step-item">
+          「完了」を押すとインストールが完了し、アプリが起動します。
+        </li>
+      </ol>
+
+      <h3>ポータブル版 (.zip)</h3>
+      <p>配布ファイル「PekoScore-Portable-vX.X.X.zip」を右クリックして「すべて展開」し、フォルダ内の <strong>PekoScore.exe</strong> を起動してください。<br>管理者権限がないPC環境や、USBメモリ等に入れて持ち運びたい場合にご利用いただけます。</p>
+    </section>
+
+    <!-- 3. 初期設定 (OBS連携) -->
+    <section id="obs">
+      <h2>3. 初期設定 (OBS Studio との連携)</h2>
+      <p>一度設定すれば、次回からは「ぺこすこあ」を起動するだけで自動的にOBSと連動します。</p>
+
+      <ol class="step-list">
+        <li class="step-item">
+          「ぺこすこあ」を起動し、左サイドバー下の <strong>「ブラウザソース用URLコピー」</strong> をクリックします。
+          <div class="url-box">
+            <span>http://127.0.0.1:8080/counter</span>
+          </div>
+        </li>
+        <li class="step-item">
+          OBS Studio を開き、ソース一覧の「＋」ボタンから <strong>「ブラウザ」</strong> を追加します。
+        </li>
+        <li class="step-item">
+          プロパティ画面で以下を入力し、「OK」をクリックします。
+          <ul>
+            <li><strong>URL</strong>: コピーしたURL（http://127.0.0.1:8080/counter）を貼り付け</li>
+            <li><strong>幅</strong>: <code>600</code>（推奨）</li>
+            <li><strong>高さ</strong>: <code>160</code>（推奨）</li>
+          </ul>
+        </li>
+      </ol>
+      <div class="callout">
+        <strong>ポイント:</strong> OBSのプロパティにある「表示されていないときにソースをシャットダウン」「シーンがアクティブになったときにブラウザを更新」のチェックは外しておくことを推奨します。
+      </div>
+    </section>
+
+    <!-- 4. 基本的な使い方 -->
+    <section id="basic">
+      <h2>4. 基本的な使い方</h2>
+      
+      <h3>メイン画面での手動操作</h3>
+      <ul>
+        <li><strong>手動カウント</strong>: 「+1」「-1」ボタンで勝利数・敗北数を直接修正できます。</li>
+        <li><strong>元に戻す (Undo)</strong>: 押し間違えた場合、直前の操作を取り消せます。</li>
+        <li><strong>リセット</strong>: 勝敗カウントを「0勝0敗」に戻します（誤操作防止の確認ダイアログが表示されます）。</li>
+      </ul>
+
+      <h3>ゲームプレイ中のショートカットキー操作</h3>
+      <p>ゲーム画面が最前面のままでも、キーボードの入力で手動カウントや取り消しが可能です。</p>
+      <ul>
+        <li><strong>F7</strong>: 勝利 (+1)</li>
+        <li><strong>F8</strong>: 敗北 (+1)</li>
+      </ul>
+      <p>キーの割り当ては、左メニューの「ショートカット」画面から自由に変更できます。</p>
+    </section>
+
+    <!-- 5. OBSスキンのカスタマイズ -->
+    <section id="customize">
+      <h2>5. OBSスキンのカスタマイズ</h2>
+      <p>左メニューの「OBS設定」から、配信画面の雰囲気に合わせて外観を自由に調整できます。</p>
+
+      <h3>4種類のデザインスキン</h3>
+      <ul>
+        <li><strong>すりガラス (Glassmorphism)</strong>: 背景になじむ半透明・光沢の洗練されたデザイン</li>
+        <li><strong>シンプル (Simple Modern)</strong>: 視認性が高く、どんなゲーム画面にも合うフラットデザイン</li>
+        <li><strong>チケット風 (Ticket Cut)</strong>: 遊び心のあるチケット・タグ形状のデザイン</li>
+        <li><strong>バッジ型 (Compact Badge)</strong>: 画面スペースを取らない省スペース設計</li>
+      </ul>
+
+      <h3>カラーピッカー & プリセット保存</h3>
+      <p>背景色、枠線色、文字色、勝敗カラーをカラーピッカーで1色ずつカスタマイズできます。お気に入りの配色は名前をつけて「プリセット」として保存・切り替えが可能です。</p>
+    </section>
+
+    <!-- 6. 環境設定 & 効果音 -->
+    <section id="settings">
+      <h2>6. 環境設定 & 効果音 (SE)</h2>
+      <p>左メニューの「環境設定」から、検知環境やサウンドを設定できます。</p>
+
+      <h3>効果音 (SE) の設定</h3>
+      <ul>
+        <li><strong>SEマスター有効化</strong>: 勝敗が自動検知されたときに効果音を鳴らすかどうかを切り替えます。</li>
+        <li><strong>勝敗に応じて音を変える (トグル)</strong>:
+          <ul>
+            <li><strong>OFF (共通モード)</strong>: 勝ち・負けに関わらず、同じ通知音を1つ鳴らします。</li>
+            <li><strong>ON (個別モード)</strong>: 勝利時と敗北時で別々の音を鳴らします。それぞれの音源に合わせて <strong>個別の音量スライダー</strong> でバランスを調整できます。</li>
+          </ul>
+        </li>
+        <li><strong>カスタム音声ファイルの指定</strong>: 「参照」ボタンからお好みの音声ファイル（.wav / .mp3 等）を設定可能です。「▶ 試聴」ボタンでその場で音量感を確認できます。</li>
+      </ul>
+
+      <h3>監視モニター & テーマ設定</h3>
+      <ul>
+        <li><strong>監視モニター</strong>: マルチモニター環境の場合、ゲームを表示しているモニターを指定できます。「自動追従」にしておけば、ゲームが起動しているモニターを自動判定します。</li>
+        <li><strong>外観テーマ</strong>: アプリ管理画面の「ライトモード」「ダークモード」を瞬時に切り替えられます。</li>
+      </ul>
+    </section>
+
+    <!-- 7. アップデート手順 -->
+    <section id="update">
+      <h2>7. アップデート手順</h2>
+      <p>新しいバージョンが公開されると、左メニューの「ヘルプ」に通知マークが表示されます。</p>
+      <ol class="step-list">
+        <li class="step-item">左メニューの「ヘルプ」を開きます。</li>
+        <li class="step-item">「アップデートを確認」をクリックします。</li>
+        <li class="step-item">更新内容を確認し、「今すぐ自動更新」をクリックします。</li>
+        <li class="step-item">最新ファイルが自動ダウンロードされ、アプリが一旦自動で終了した後、自動で最新版が立ち上がります。</li>
+      </ol>
+      <div class="callout">
+        <strong>安心設計:</strong> 自動アップデートを行っても、これまでの勝敗カウントやキー設定、配色の個人設定（config.json）はそのまま保護・維持されます。
+      </div>
+    </section>
+
+    <!-- 8. アンインストール手順 -->
+    <section id="uninstall">
+      <h2>8. アンインストール手順</h2>
+      <h3>インストーラー版の場合</h3>
+      <ol>
+        <li>Windowsの「設定」>「アプリ」>「インストールされているアプリ」を開きます。</li>
+        <li>「ぺこすこあ」の右端にあるメニューから「アンインストール」を選択します。</li>
+        <li>画面の案内に従って実行すると、アプリ本体および設定ファイルが完全に消去されます。</li>
+      </ol>
+      <h3>ポータブル版の場合</h3>
+      <p>展開したフォルダごとゴミ箱に入れて削除してください。</p>
+    </section>
+
+    <!-- 9. よくある質問 -->
+    <section id="troubleshooting">
+      <h2>9. よくある質問 (FAQ)</h2>
+      
+      <div class="qa-item">
+        <div class="qa-q">Q. 勝敗が自動でカウントされません</div>
+        <div class="qa-a">ゲームの画面表示設定が「ボーダーレス・ウィンドウ」または「ウィンドウ」になっているかご確認ください。全画面排他モードの場合、画面取得が制限される場合があります。また、検知後は多重カウント防止のため25秒間の待機時間（クールダウン）が入ります。</div>
+      </div>
+
+      <div class="qa-item">
+        <div class="qa-q">Q. OBSにカウンター画面が映りません</div>
+        <div class="qa-a">「ぺこすこあ」アプリが起動していることをご確認ください。また、ブラウザソースのURLが「http://127.0.0.1:8080/counter」になっているか、セキュリティソフト等で遮断されていないかご確認ください。</div>
+      </div>
+
+      <div class="qa-item">
+        <div class="qa-q">Q. カウントを手動で修正したいです</div>
+        <div class="qa-a">メイン画面の「+1」「-1」ボタン、またはショートカットキー（初期設定: F7/F8）でいつでも自由に増減できます。</div>
+      </div>
+    </section>
+
+    <!-- 10. 権利表記 & 免責事項 -->
+    <section id="legal">
+      <h2>10. 権利表記 & 免責事項</h2>
+      <h3>権利表記</h3>
+      <p>本ツールで検知対象としている各ゲームタイトルの商標・知的財産権は、それぞれの権利元に帰属します。本ツールは個人が制作した非公式のファンメイドツールであり、各ゲーム会社様との提携・公認関係等はありません。</p>
+
+      <h3>免責事項</h3>
+      <p>本ツールの使用により生じたいかなるトラブル・損害も制作者は責任を負いかねます。各配信プラットフォーム等の利用規約を遵守してご利用ください。</p>
+
+      <h3>フォント・UI著作権</h3>
+      <p>Zen Maru Gothic (SIL Open Font License 1.1) / &copy; 2026 ぺこぺこ堂 (PekoPeko-Do)</p>
+    </section>
+
+    <!-- フッター -->
+    <footer>
+      &copy; 2026 ぺこぺこ堂 (PekoPeko-Do) - ぺこすこあ (PekoScore)
+    </footer>
+
+  </div>
+
+</body>
+</html>

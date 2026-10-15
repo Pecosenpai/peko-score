@@ -13,7 +13,7 @@ import urllib.request
 import subprocess
 from typing import Callable, Optional, Dict, Any
 
-CURRENT_VERSION = "1.0.5"
+CURRENT_VERSION = "1.0.6"
 GITHUB_REPO = "Pecosenpai/peko-score"
 API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
@@ -142,6 +142,8 @@ def execute_baton_pass_update(zip_path: str, base_dir: str, new_version: str = "
         app_id_key = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{E681C3D8-7B84-48E1-9AE9-482026PEKO01}_is1"
         reg_update_cmd = f'reg add "{app_id_key}" /v DisplayVersion /t REG_SZ /d "{clean_ver}" /f >nul 2>&1\n'
         reg_update_cmd += f'reg add "{app_id_key}" /v DisplayName /t REG_SZ /d "ぺこすこあ" /f >nul 2>&1\n'
+        icon_path = os.path.join(base_dir, "_internal", "icon.ico")
+        reg_update_cmd += f'reg add "{app_id_key}" /v DisplayIcon /t REG_SZ /d "{icon_path}" /f >nul 2>&1\n'
 
     bat_path = os.path.join(base_dir, "_apply_update.bat")
     bat_content = f"""@echo off
