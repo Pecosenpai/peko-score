@@ -13,7 +13,7 @@ import urllib.request
 import subprocess
 from typing import Callable, Optional, Dict, Any
 
-CURRENT_VERSION = "1.0.6"
+CURRENT_VERSION = "1.0.7"
 GITHUB_REPO = "Pecosenpai/peko-score"
 API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
