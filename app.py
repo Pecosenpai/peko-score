@@ -28,6 +28,8 @@ from skin_presets_manager import (
 )
 import updater
 import sound_service
+import i18n
+from i18n import t, get_i18n
 
 # ぺこぺこ堂カラーパレット (ライト / ダーク両対応)
 COLOR_BG_IVORY = ("#F6F7F2", "#181C19")       # 全体背景 (温かみのあるアイボリー / 深いフォレストブラック)
@@ -153,8 +155,12 @@ class PekoScoreApp(ctk.CTk):
         # 設定読み込み & 正規化
         self.config = normalize_config_colors(load_config())
 
+        # 国際化 (i18n) 初期化
+        cur_lang = self.config.get("language", "ja")
+        get_i18n().set_language(cur_lang)
+
         # ウィンドウ初期設定 (サイズ固定)
-        self.title("ぺこすこあ")
+        self.title(t("app_title"))
         self.geometry("780x560")
         self.resizable(False, False)
 
@@ -180,6 +186,7 @@ class PekoScoreApp(ctk.CTk):
         self.app_state.font_size = self.config.get("font_size", 64)
         self.app_state.animation_enabled = self.config.get("animation_enabled", True)
         self.app_state.auto_detect_enabled = self.config.get("auto_detect_enabled", True)
+        self.app_state.language = cur_lang
 
         self.port = start_server(self.app_state, port=8080)
         self.obs_url = f"http://127.0.0.1:{self.port}/counter"
@@ -249,9 +256,9 @@ class PekoScoreApp(ctk.CTk):
             except Exception:
                 pass
 
-        # アイコンの下に「ぺこすこあ」 (中央配置)
+        # アイコンの下にアプリ名 (中央配置)
         self.lbl_brand_title = ctk.CTkLabel(
-            self.header_brand, text="ぺこすこあ",
+            self.header_brand, text=t("app_title"),
             font=ctk.CTkFont(family="Meiryo UI", size=17, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         )
@@ -278,7 +285,7 @@ class PekoScoreApp(ctk.CTk):
         # ナビゲーションボタン (ヘッダーの下に配置)
         img_main = self.nav_icons["main"]["active"] if self.nav_icons.get("main") else None
         self.btn_nav_main = ctk.CTkButton(
-            self.sidebar_frame, text=" メイン", font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
+            self.sidebar_frame, text=" " + t("nav.main"), font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
             image=img_main, compound="left", anchor="w",
             fg_color=COLOR_SAGE_GREEN, text_color="#FFFFFF", hover_color=COLOR_SAGE_HOVER,
             corner_radius=10, height=38, command=lambda: self.show_view("main")
@@ -287,7 +294,7 @@ class PekoScoreApp(ctk.CTk):
 
         img_obs = self.nav_icons["obs"]["normal"] if self.nav_icons.get("obs") else None
         self.btn_nav_obs = ctk.CTkButton(
-            self.sidebar_frame, text=" OBS設定", font=ctk.CTkFont(family="Meiryo UI", size=13),
+            self.sidebar_frame, text=" " + t("nav.obs"), font=ctk.CTkFont(family="Meiryo UI", size=13),
             image=img_obs, compound="left", anchor="w",
             fg_color="transparent", text_color=COLOR_TEXT_MAIN, hover_color=COLOR_NAV_HOVER,
             corner_radius=10, height=38, command=lambda: self.show_view("obs")
@@ -296,7 +303,7 @@ class PekoScoreApp(ctk.CTk):
 
         img_hotkey = self.nav_icons["hotkey"]["normal"] if self.nav_icons.get("hotkey") else None
         self.btn_nav_hotkey = ctk.CTkButton(
-            self.sidebar_frame, text=" ショートカット", font=ctk.CTkFont(family="Meiryo UI", size=13),
+            self.sidebar_frame, text=" " + t("nav.hotkey"), font=ctk.CTkFont(family="Meiryo UI", size=13),
             image=img_hotkey, compound="left", anchor="w",
             fg_color="transparent", text_color=COLOR_TEXT_MAIN, hover_color=COLOR_NAV_HOVER,
             corner_radius=10, height=38, command=lambda: self.show_view("hotkey")
@@ -305,7 +312,7 @@ class PekoScoreApp(ctk.CTk):
 
         img_settings = self.nav_icons["settings"]["normal"] if self.nav_icons.get("settings") else None
         self.btn_nav_settings = ctk.CTkButton(
-            self.sidebar_frame, text=" 環境設定", font=ctk.CTkFont(family="Meiryo UI", size=13),
+            self.sidebar_frame, text=" " + t("nav.settings"), font=ctk.CTkFont(family="Meiryo UI", size=13),
             image=img_settings, compound="left", anchor="w",
             fg_color="transparent", text_color=COLOR_TEXT_MAIN, hover_color=COLOR_NAV_HOVER,
             corner_radius=10, height=38, command=lambda: self.show_view("settings")
@@ -314,7 +321,7 @@ class PekoScoreApp(ctk.CTk):
 
         img_help = self.nav_icons["help"]["normal"] if self.nav_icons.get("help") else None
         self.btn_nav_help = ctk.CTkButton(
-            self.sidebar_frame, text=" ヘルプ", font=ctk.CTkFont(family="Meiryo UI", size=13),
+            self.sidebar_frame, text=" " + t("nav.help"), font=ctk.CTkFont(family="Meiryo UI", size=13),
             image=img_help, compound="left", anchor="w",
             fg_color="transparent", text_color=COLOR_TEXT_MAIN, hover_color=COLOR_NAV_HOVER,
             corner_radius=10, height=38, command=lambda: self.show_view("help")
@@ -323,7 +330,7 @@ class PekoScoreApp(ctk.CTk):
 
         # 最下部に常に密着するブラウザソースURLコピーボタン
         self.btn_copy_url = ctk.CTkButton(
-            self.sidebar_frame, text="ブラウザソース用URLコピー", font=ctk.CTkFont(family="Meiryo UI", size=11),
+            self.sidebar_frame, text=t("nav.copy_obs_url"), font=ctk.CTkFont(family="Meiryo UI", size=11),
             fg_color=("#FFFFFF", "#272E29"), text_color=COLOR_SAGE_GREEN, hover_color=("#F0F4F1", "#333C36"),
             corner_radius=8, height=36, border_width=1, border_color=COLOR_SAGE_GREEN,
             command=self.copy_obs_url
@@ -357,9 +364,9 @@ class PekoScoreApp(ctk.CTk):
         self.center_card.grid_columnconfigure((0, 1), weight=1)
         self.center_card.grid_rowconfigure(0, weight=1)
 
-        # 大きなスコア表示: 「5勝 2敗」
+        # 大きなスコア表示: 「5勝 2敗」 / 「5W 2L」
         self.score_display = ctk.CTkLabel(
-            self.center_card, text="0勝 0敗",
+            self.center_card, text=t("main.score_format", wins=self.app_state.wins, losses=self.app_state.losses),
             font=ctk.CTkFont(family="Meiryo UI", size=54, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         )
@@ -367,28 +374,28 @@ class PekoScoreApp(ctk.CTk):
 
         # 手動操作ボタン群 (上段: +1勝, -1勝 / 下段: +1敗, -1敗)
         self.btn_win_plus = ctk.CTkButton(
-            self.center_card, text="+1 勝", font=ctk.CTkFont(family="Meiryo UI", size=15, weight="bold"),
+            self.center_card, text=t("main.win_plus"), font=ctk.CTkFont(family="Meiryo UI", size=15, weight="bold"),
             fg_color=COLOR_WIN_BTN, hover_color=COLOR_WIN_HOVER, height=44, corner_radius=12,
             command=lambda: self.on_manual_modify(win_delta=1)
         )
         self.btn_win_plus.grid(row=1, column=0, padx=(24, 8), pady=5, sticky="ew")
 
         self.btn_win_minus = ctk.CTkButton(
-            self.center_card, text="-1 勝", font=ctk.CTkFont(family="Meiryo UI", size=13),
+            self.center_card, text=t("main.win_minus"), font=ctk.CTkFont(family="Meiryo UI", size=13),
             fg_color=COLOR_SUB_BTN, hover_color=COLOR_SUB_HOVER, height=44, corner_radius=12,
             command=lambda: self.on_manual_modify(win_delta=-1)
         )
         self.btn_win_minus.grid(row=1, column=1, padx=(8, 24), pady=5, sticky="ew")
 
         self.btn_loss_plus = ctk.CTkButton(
-            self.center_card, text="+1 敗", font=ctk.CTkFont(family="Meiryo UI", size=15, weight="bold"),
+            self.center_card, text=t("main.loss_plus"), font=ctk.CTkFont(family="Meiryo UI", size=15, weight="bold"),
             fg_color=COLOR_LOSS_BTN, hover_color=COLOR_LOSS_HOVER, height=44, corner_radius=12,
             command=lambda: self.on_manual_modify(loss_delta=1)
         )
         self.btn_loss_plus.grid(row=2, column=0, padx=(24, 8), pady=5, sticky="ew")
 
         self.btn_loss_minus = ctk.CTkButton(
-            self.center_card, text="-1 敗", font=ctk.CTkFont(family="Meiryo UI", size=13),
+            self.center_card, text=t("main.loss_minus"), font=ctk.CTkFont(family="Meiryo UI", size=13),
             fg_color=COLOR_SUB_BTN, hover_color=COLOR_SUB_HOVER, height=44, corner_radius=12,
             command=lambda: self.on_manual_modify(loss_delta=-1)
         )
@@ -399,14 +406,14 @@ class PekoScoreApp(ctk.CTk):
         self.bottom_btn_frame.grid(row=3, column=0, columnspan=2, pady=(12, 18))
 
         self.btn_undo = ctk.CTkButton(
-            self.bottom_btn_frame, text="↩ 取り消し (Undo)", font=ctk.CTkFont(family="Meiryo UI", size=12),
+            self.bottom_btn_frame, text=t("main.undo"), font=ctk.CTkFont(family="Meiryo UI", size=12),
             fg_color=COLOR_UNDO_BTN, hover_color=COLOR_UNDO_HOVER, height=32, width=130, corner_radius=8,
             command=self.on_undo
         )
         self.btn_undo.pack(side="left", padx=8)
 
         self.btn_reset = ctk.CTkButton(
-            self.bottom_btn_frame, text="🔄 リセット", font=ctk.CTkFont(family="Meiryo UI", size=12),
+            self.bottom_btn_frame, text=t("main.reset"), font=ctk.CTkFont(family="Meiryo UI", size=12),
             fg_color=COLOR_RESET_BTN, hover_color=COLOR_RESET_HOVER, height=32, width=110, corner_radius=8,
             command=self.confirm_reset
         )
@@ -414,7 +421,7 @@ class PekoScoreApp(ctk.CTk):
 
         # 直近ログ (最下部)
         self.log_label = ctk.CTkLabel(
-            self.view_main, text="ログ: アプリを起動しました",
+            self.view_main, text=t("main.log_format", text=t("main.log_start")),
             font=ctk.CTkFont(family="Meiryo UI", size=11), text_color=COLOR_TEXT_MUTED
         )
         self.log_label.grid(row=2, column=0, padx=24, pady=(0, 14), sticky="w")
@@ -424,22 +431,22 @@ class PekoScoreApp(ctk.CTk):
         self.view_obs = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.view_obs.grid_columnconfigure(0, weight=1)
 
-        obs_title = ctk.CTkLabel(
-            self.view_obs, text="OBSブラウザソース設定",
+        self.obs_title = ctk.CTkLabel(
+            self.view_obs, text=t("obs.title"),
             font=ctk.CTkFont(family="Meiryo UI", size=20, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         )
-        obs_title.pack(anchor="w", padx=24, pady=(20, 10))
+        self.obs_title.pack(anchor="w", padx=24, pady=(20, 10))
 
         obs_card = ctk.CTkScrollableFrame(self.view_obs, corner_radius=16, fg_color=COLOR_CARD_WHITE, border_width=1, border_color=COLOR_CARD_BORDER)
         obs_card.pack(fill="both", expand=True, padx=24, pady=10)
 
         # URL案内
-        url_label = ctk.CTkLabel(obs_card, text=f"ブラウザソースURL: {self.obs_url}", font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"), text_color=COLOR_SAGE_GREEN)
-        url_label.pack(anchor="w", padx=20, pady=(16, 4))
+        self.obs_url_label = ctk.CTkLabel(obs_card, text=t("obs.url_label", url=self.obs_url), font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"), text_color=COLOR_SAGE_GREEN)
+        self.obs_url_label.pack(anchor="w", padx=20, pady=(16, 4))
         
-        url_sub = ctk.CTkLabel(obs_card, text="※OBSの「ブラウザソース」に追加し、幅500×高さ200等に設定してください。", font=ctk.CTkFont(family="Meiryo UI", size=11), text_color=COLOR_TEXT_MUTED)
-        url_sub.pack(anchor="w", padx=20, pady=(0, 10))
+        self.obs_url_sub = ctk.CTkLabel(obs_card, text=t("obs.url_hint"), font=ctk.CTkFont(family="Meiryo UI", size=11), text_color=COLOR_TEXT_MUTED)
+        self.obs_url_sub.pack(anchor="w", padx=20, pady=(0, 10))
 
         # プレビュー表示エリア (スキン選択の上)
         self.preview_container = ctk.CTkFrame(obs_card, fg_color="#1A2027", corner_radius=12)
@@ -452,19 +459,14 @@ class PekoScoreApp(ctk.CTk):
         skin_frame = ctk.CTkFrame(obs_card, fg_color="transparent")
         skin_frame.pack(fill="x", padx=20, pady=6)
 
-        ctk.CTkLabel(skin_frame, text="スキン / テーマ:", font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN).pack(side="left", padx=(0, 12))
+        self.lbl_skin_label = ctk.CTkLabel(skin_frame, text=t("obs.skin_label"), font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN)
+        self.lbl_skin_label.pack(side="left", padx=(0, 12))
         
-        self.skin_map = {
-            "グラスモーフィズム HUD": "glassmorphism",
-            "ピルバッジ": "badge",
-            "レトロチケット": "ticket",
-            "シンプル文字のみ": "simple"
-        }
-        self.skin_reverse_map = {v: k for k, v in self.skin_map.items()}
-
-        current_skin_key = self.skin_reverse_map.get(self.app_state.skin, "グラスモーフィズム HUD")
+        self.skin_keys = ["glassmorphism", "badge", "ticket", "simple"]
+        skin_display_names = [t(f"obs.skin_{k}") for k in self.skin_keys]
+        current_skin_key = t(f"obs.skin_{self.app_state.skin}")
         self.skin_combo = ctk.CTkComboBox(
-            skin_frame, values=list(self.skin_map.keys()), width=240,
+            skin_frame, values=skin_display_names, width=240,
             font=ctk.CTkFont(family="Meiryo UI", size=12),
             dropdown_font=ctk.CTkFont(family="Meiryo UI", size=12),
             state="readonly",
@@ -481,7 +483,8 @@ class PekoScoreApp(ctk.CTk):
         preset_row = ctk.CTkFrame(self.color_custom_box, fg_color="transparent")
         preset_row.pack(fill="x", padx=12, pady=(10, 6))
 
-        ctk.CTkLabel(preset_row, text="配色プリセット:", font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"), text_color=COLOR_TEXT_MAIN).pack(side="left", padx=(0, 8))
+        self.lbl_preset_label = ctk.CTkLabel(preset_row, text=t("obs.preset_label"), font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"), text_color=COLOR_TEXT_MAIN)
+        self.lbl_preset_label.pack(side="left", padx=(0, 8))
 
         self.preset_combo = ctk.CTkComboBox(
             preset_row, values=["デフォルト"], width=140,
@@ -493,7 +496,7 @@ class PekoScoreApp(ctk.CTk):
         self.preset_combo.pack(side="left", padx=(0, 8))
 
         self.btn_save_preset = ctk.CTkButton(
-            preset_row, text="保存", width=50, height=28,
+            preset_row, text=t("obs.preset_save"), width=50, height=28,
             font=ctk.CTkFont(family="Meiryo UI", size=11, weight="bold"),
             fg_color=COLOR_SAGE_GREEN, hover_color=COLOR_SAGE_HOVER,
             command=self.on_save_preset
@@ -501,7 +504,7 @@ class PekoScoreApp(ctk.CTk):
         self.btn_save_preset.pack(side="left", padx=(0, 6))
 
         self.btn_reset_preset = ctk.CTkButton(
-            preset_row, text="リセット", width=62, height=28,
+            preset_row, text=t("obs.preset_reset"), width=62, height=28,
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             fg_color=("#E0E6E2", "#353F38"), hover_color=("#D0DAD3", "#434F47"),
             text_color=COLOR_TEXT_MAIN,
@@ -510,7 +513,7 @@ class PekoScoreApp(ctk.CTk):
         self.btn_reset_preset.pack(side="left", padx=(0, 6))
 
         self.btn_delete_preset = ctk.CTkButton(
-            preset_row, text="削除", width=48, height=28,
+            preset_row, text=t("obs.preset_delete"), width=48, height=28,
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             fg_color=("#F2DFDC", "#4D3432"), hover_color=("#E8CCC8", "#5E3E3B"),
             text_color=("#C45B50", "#EFA8A0"),
@@ -526,7 +529,8 @@ class PekoScoreApp(ctk.CTk):
         font_frame = ctk.CTkFrame(obs_card, fg_color="transparent")
         font_frame.pack(fill="x", padx=20, pady=8)
 
-        ctk.CTkLabel(font_frame, text="フォント選択:", font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN).pack(side="left", padx=(0, 12))
+        self.lbl_font_label = ctk.CTkLabel(font_frame, text=t("obs.font_label"), font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN)
+        self.lbl_font_label.pack(side="left", padx=(0, 12))
         
         font_candidates = ["Meiryo UI", "Yu Gothic UI", "MS Gothic", "Arial", "Impact", "Consolas"]
         self.font_combo = ctk.CTkComboBox(
@@ -543,7 +547,8 @@ class PekoScoreApp(ctk.CTk):
         size_frame = ctk.CTkFrame(obs_card, fg_color="transparent")
         size_frame.pack(fill="x", padx=20, pady=8)
 
-        ctk.CTkLabel(size_frame, text="文字サイズ (px):", font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN).pack(side="left", padx=(0, 12))
+        self.lbl_size_label = ctk.CTkLabel(size_frame, text=t("obs.size_label"), font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN)
+        self.lbl_size_label.pack(side="left", padx=(0, 12))
         self.size_slider = ctk.CTkSlider(size_frame, from_=32, to=120, number_of_steps=22, width=180, command=self.on_size_change)
         self.size_slider.set(self.app_state.font_size)
         self.size_slider.pack(side="left", padx=(0, 12))
@@ -552,7 +557,7 @@ class PekoScoreApp(ctk.CTk):
 
         # アニメーション切り替え
         self.switch_anim = ctk.CTkSwitch(
-            obs_card, text="カウント時に弾むアニメーション (Pop)", font=ctk.CTkFont(family="Meiryo UI", size=13),
+            obs_card, text=t("obs.anim_label"), font=ctk.CTkFont(family="Meiryo UI", size=13),
             progress_color=COLOR_SAGE_GREEN, command=self.on_anim_toggle
         )
         self.switch_anim.select() if self.app_state.animation_enabled else self.switch_anim.deselect()
@@ -571,46 +576,43 @@ class PekoScoreApp(ctk.CTk):
         self.binding_action = None  # "win", "loss", "undo", "reset"
         self.pressed_keys_record = set()
 
-        hk_title = ctk.CTkLabel(
-            self.view_hotkey, text="ショートカットキー設定",
+        self.hk_title = ctk.CTkLabel(
+            self.view_hotkey, text=t("hotkey.title"),
             font=ctk.CTkFont(family="Meiryo UI", size=20, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         )
-        hk_title.pack(anchor="w", padx=24, pady=(20, 10))
+        self.hk_title.pack(anchor="w", padx=24, pady=(20, 10))
 
         hk_card = ctk.CTkFrame(self.view_hotkey, corner_radius=16, fg_color=COLOR_CARD_WHITE, border_width=1, border_color=COLOR_CARD_BORDER)
         hk_card.pack(fill="both", expand=True, padx=24, pady=10)
 
         # ホットキー有効化スイッチ
         self.switch_hk_enable = ctk.CTkSwitch(
-            hk_card, text="グローバルショートカットキーを有効化", font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
+            hk_card, text=t("hotkey.enable_switch"), font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
             progress_color=COLOR_SAGE_GREEN, command=self.on_hotkey_toggle
         )
         self.switch_hk_enable.select() if self.config.get("hotkeys_enabled", True) else self.switch_hk_enable.deselect()
         self.switch_hk_enable.pack(anchor="w", padx=20, pady=(18, 8))
 
-        desc_label = ctk.CTkLabel(
+        self.lbl_hk_desc = ctk.CTkLabel(
             hk_card, 
-            text="ボタンをクリック後、設定したいキーを押すだけで割り当てられます（ESCでキャンセル）。\nゲームプレイ中（画面が最前面）でもキー入力で手動介入できます。",
+            text=t("hotkey.desc"),
             font=ctk.CTkFont(family="Meiryo UI", size=11), text_color=COLOR_TEXT_MUTED, justify="left"
         )
-        desc_label.pack(anchor="w", padx=20, pady=(0, 14))
+        self.lbl_hk_desc.pack(anchor="w", padx=20, pady=(0, 14))
 
         # キーバインドリスト
         list_frame = ctk.CTkFrame(hk_card, fg_color="transparent")
         list_frame.pack(fill="x", padx=20, pady=6)
         list_frame.grid_columnconfigure(0, weight=1)
 
-        self.hk_action_labels = {
-            "win": "勝利 (+1)",
-            "loss": "敗北 (+1)",
-            "undo": "取り消し (Undo)",
-            "reset": "リセット"
-        }
+        self.hk_action_keys = ["win", "loss", "undo", "reset"]
+        self.hk_action_labels_widgets = {}
         self.hk_buttons = {}
 
         row_idx = 0
-        for act_id, act_name in self.hk_action_labels.items():
+        for act_id in self.hk_action_keys:
+            act_name = t(f"hotkey.act_{act_id}")
             row_frame = ctk.CTkFrame(list_frame, fg_color=("#F8FAF7", "#2F3731"), corner_radius=10, height=44)
             row_frame.grid(row=row_idx, column=0, pady=5, sticky="ew")
             row_frame.grid_columnconfigure(0, weight=1)
@@ -621,8 +623,9 @@ class PekoScoreApp(ctk.CTk):
                 text_color=COLOR_TEXT_MAIN
             )
             lbl.grid(row=0, column=0, padx=16, pady=8, sticky="w")
+            self.hk_action_labels_widgets[act_id] = lbl
 
-            key_text = self.config.get(f"hotkey_{act_id}", "未設定").upper()
+            key_text = self.config.get(f"hotkey_{act_id}", t("hotkey.not_set")).upper()
             btn = ctk.CTkButton(
                 row_frame, text=key_text,
                 font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"),
@@ -638,10 +641,11 @@ class PekoScoreApp(ctk.CTk):
         self.binding_status_frame = ctk.CTkFrame(hk_card, fg_color=("#EEF5F0", "#2D3831"), corner_radius=10)
         self.binding_status_lbl = ctk.CTkLabel(
             self.binding_status_frame, 
-            text="キーを押してください (ESCでキャンセル)",
+            text=t("hotkey.binding_status"),
             font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
             text_color=COLOR_SAGE_GREEN
         )
+        self.binding_status_lbl.pack(pady=10)
         self.binding_status_lbl.pack(pady=10)
 
     def setup_settings_view(self):
@@ -649,12 +653,12 @@ class PekoScoreApp(ctk.CTk):
         self.view_settings = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.view_settings.grid_columnconfigure(0, weight=1)
 
-        set_title = ctk.CTkLabel(
-            self.view_settings, text="環境 & 検知設定",
+        self.set_title = ctk.CTkLabel(
+            self.view_settings, text=t("settings.title"),
             font=ctk.CTkFont(family="Meiryo UI", size=20, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         )
-        set_title.pack(anchor="w", padx=24, pady=(20, 10))
+        self.set_title.pack(anchor="w", padx=24, pady=(20, 10))
 
         set_card = ctk.CTkFrame(self.view_settings, corner_radius=16, fg_color=COLOR_CARD_WHITE, border_width=1, border_color=COLOR_CARD_BORDER)
         set_card.pack(fill="both", expand=True, padx=24, pady=10)
@@ -663,21 +667,39 @@ class PekoScoreApp(ctk.CTk):
         theme_frame = ctk.CTkFrame(set_card, fg_color="transparent")
         theme_frame.pack(fill="x", padx=20, pady=(20, 8))
 
-        ctk.CTkLabel(theme_frame, text="外観テーマ:", font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN).pack(side="left", padx=(0, 12))
+        self.lbl_theme = ctk.CTkLabel(theme_frame, text=t("settings.theme_label"), font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN)
+        self.lbl_theme.pack(side="left", padx=(0, 12))
 
         self.theme_segment = ctk.CTkSegmentedButton(
-            theme_frame, values=["ライトモード", "ダークモード"],
+            theme_frame, values=[t("settings.theme_light"), t("settings.theme_dark")],
             font=ctk.CTkFont(family="Meiryo UI", size=12),
             selected_color=COLOR_SAGE_GREEN, selected_hover_color=COLOR_SAGE_HOVER,
             command=self.on_theme_change
         )
-        current_theme_str = "ダークモード" if getattr(self, "appearance_mode", "light").lower() == "dark" else "ライトモード"
+        current_theme_str = t("settings.theme_dark") if getattr(self, "appearance_mode", "light").lower() == "dark" else t("settings.theme_light")
         self.theme_segment.set(current_theme_str)
         self.theme_segment.pack(side="left")
 
+        # 言語設定 (Japanese / 日本語  |  English / 英語)
+        lang_frame = ctk.CTkFrame(set_card, fg_color="transparent")
+        lang_frame.pack(fill="x", padx=20, pady=(4, 8))
+
+        self.lbl_lang = ctk.CTkLabel(lang_frame, text=t("settings.language_label"), font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN)
+        self.lbl_lang.pack(side="left", padx=(0, 12))
+
+        self.lang_segment = ctk.CTkSegmentedButton(
+            lang_frame, values=["Japanese / 日本語", "English / 英語"],
+            font=ctk.CTkFont(family="Meiryo UI", size=12),
+            selected_color=COLOR_SAGE_GREEN, selected_hover_color=COLOR_SAGE_HOVER,
+            command=self.on_language_change
+        )
+        cur_lang_choice = "English / 英語" if self.config.get("language", "ja") == "en" else "Japanese / 日本語"
+        self.lang_segment.set(cur_lang_choice)
+        self.lang_segment.pack(side="left")
+
         # 自動検知の有効化
         self.switch_auto = ctk.CTkSwitch(
-            set_card, text="ゲーム自動勝敗検知を有効化", font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
+            set_card, text=t("settings.auto_detect"), font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
             progress_color=COLOR_SAGE_GREEN, command=self.on_auto_detect_toggle
         )
         self.switch_auto.select() if self.app_state.auto_detect_enabled else self.switch_auto.deselect()
@@ -687,7 +709,8 @@ class PekoScoreApp(ctk.CTk):
         mon_frame = ctk.CTkFrame(set_card, fg_color="transparent")
         mon_frame.pack(fill="x", padx=20, pady=8)
 
-        ctk.CTkLabel(mon_frame, text="監視モニター:", font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN).pack(side="left", padx=(0, 12))
+        self.lbl_mon = ctk.CTkLabel(mon_frame, text=t("settings.monitor_label"), font=ctk.CTkFont(family="Meiryo UI", size=13), text_color=COLOR_TEXT_MAIN)
+        self.lbl_mon.pack(side="left", padx=(0, 12))
 
         # モニター一覧の取得 (実機の型番検出 & 絵文字なし)
         self.monitor_options = get_monitor_choices()
@@ -710,7 +733,7 @@ class PekoScoreApp(ctk.CTk):
 
         # SEマスター有効化スイッチ
         self.switch_sound = ctk.CTkSwitch(
-            set_card, text="勝敗自動検知時に効果音 (SE) を鳴らす",
+            set_card, text=t("settings.sound_enable"),
             font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
             progress_color=COLOR_SAGE_GREEN, command=self.on_sound_toggle
         )
@@ -723,7 +746,7 @@ class PekoScoreApp(ctk.CTk):
 
         # 勝敗別トグル
         self.switch_separate = ctk.CTkSwitch(
-            self.sound_options_box, text="勝敗に応じて音を変える",
+            self.sound_options_box, text=t("settings.sound_separate"),
             font=ctk.CTkFont(family="Meiryo UI", size=12),
             progress_color=COLOR_SAGE_GREEN, command=self.on_separate_sound_toggle
         )
@@ -736,20 +759,27 @@ class PekoScoreApp(ctk.CTk):
 
         self.rebuild_sound_controls()
 
-        lbl_desc = ctk.CTkLabel(
+        self.lbl_settings_desc = ctk.CTkLabel(
             set_card, 
-            text="・【外観テーマ】作業環境やお好みに応じてライト／ダークを瞬時に切り替えられます。\n・【効果音(SE)】検知時に通知音でお知らせします。お好きな音声ファイル(.wav/.mp3等)も指定可能です。\n・【自動追従】ゲーム画面がサブモニターにあっても自動で判定します。\n・多重カウント防止のため、検知後は25秒間のクールダウンが入ります。",
+            text=t("settings.desc"),
             font=ctk.CTkFont(family="Meiryo UI", size=12), text_color=COLOR_TEXT_MUTED, justify="left"
         )
-        lbl_desc.pack(anchor="w", padx=20, pady=(12, 16))
+        self.lbl_settings_desc.pack(anchor="w", padx=20, pady=(12, 16))
 
     def load_help_content(self):
-        path = os.path.join(get_app_dir(), "help_content.json")
+        cur_lang = get_i18n().current_lang
+        filename = f"help_content_{cur_lang}.json" if cur_lang != "ja" else "help_content.json"
+        path = os.path.join(get_app_dir(), filename)
         if not os.path.exists(path):
-            path = os.path.join(get_resource_dir(), "help_content.json")
+            path = os.path.join(get_resource_dir(), filename)
+        if not os.path.exists(path):
+            path = os.path.join(get_app_dir(), "help_content.json")
+            if not os.path.exists(path):
+                path = os.path.join(get_resource_dir(), "help_content.json")
+
         default_content = {
             "app_info": {
-                "version": "Ver 1.0.1",
+                "version": "Ver 1.0.6",
                 "subtitle": "配信者向け対戦ゲーム専用\n勝敗自動カウントツール",
                 "credit": "Presented by ぺこぺこ堂\n(PekoPeko-Do)",
                 "contact_button_text": "お問い合わせ・ご要望",
@@ -780,7 +810,7 @@ class PekoScoreApp(ctk.CTk):
                     self._cached_help_data = data
                     return data
             except Exception as e:
-                print(f"Error loading help_content.json: {e}")
+                print(f"Error loading help_content: {e}")
                 if hasattr(self, "_cached_help_data"):
                     return self._cached_help_data
         return default_content
@@ -790,7 +820,7 @@ class PekoScoreApp(ctk.CTk):
         manual_url = f"http://127.0.0.1:{port}/manual"
         try:
             webbrowser.open(manual_url)
-            self.log("操作マニュアルをブラウザで開きました")
+            self.log(t("settings.log_manual_open"))
         except Exception as e:
             # フォールバック: 直接ファイルをブラウザで開く
             res_dir = get_resource_dir()
@@ -804,13 +834,13 @@ class PekoScoreApp(ctk.CTk):
         url = help_data.get("app_info", {}).get("contact_url", "https://forms.gle/dummy")
         try:
             webbrowser.open(url)
-            self.log(f"お問い合わせフォームを開きました: {url}")
+            self.log(t("settings.log_feedback_open", url=url))
         except Exception as e:
             self.log(f"フォームを開けませんでした: {e}")
 
     def on_check_update_clicked(self):
         if hasattr(self, "btn_check_update") and self.btn_check_update.winfo_exists():
-            self.btn_check_update.configure(text="確認中...", state="disabled")
+            self.btn_check_update.configure(text=t("help.checking_update"), state="disabled")
         if hasattr(self, "lbl_update_status") and self.lbl_update_status.winfo_exists():
             self.lbl_update_status.configure(text="")
 
@@ -821,33 +851,34 @@ class PekoScoreApp(ctk.CTk):
 
     def on_update_result_received(self, res, user_initiated=True):
         if hasattr(self, "btn_check_update") and self.btn_check_update.winfo_exists():
-            self.btn_check_update.configure(text="アップデートを確認", state="normal")
+            self.btn_check_update.configure(text=t("help.btn_update"), state="normal")
 
         if not res.get("success"):
             if user_initiated:
                 if hasattr(self, "lbl_update_status") and self.lbl_update_status.winfo_exists():
-                    self.lbl_update_status.configure(text="確認に失敗しました", text_color=COLOR_TEXT_MUTED)
-                self.log(f"アップデート確認エラー: {res.get('error')}")
+                    self.lbl_update_status.configure(text=t("help.update_failed"), text_color=COLOR_TEXT_MUTED)
+                self.log(t("settings.log_update_error", error=res.get("error", "")))
             return
 
         if res.get("has_update"):
             latest_v = res.get("latest_version")
             if hasattr(self, "lbl_update_status") and self.lbl_update_status.winfo_exists():
-                self.lbl_update_status.configure(text=f"🎉 {latest_v} が利用可能！", text_color=COLOR_SAGE_GREEN)
-            self.log(f"新バージョンが見つかりました: {latest_v}")
+                self.lbl_update_status.configure(text=t("help.update_available", version=latest_v), text_color=COLOR_SAGE_GREEN)
+            self.log(t("settings.log_update_found", version=latest_v))
+            self._update_badge_visible = True
             if hasattr(self, "btn_nav_help") and self.btn_nav_help.winfo_exists():
-                self.btn_nav_help.configure(text=" ヘルプ ●")
+                self.btn_nav_help.configure(text=" " + t("help.nav_update_badge").strip())
             if user_initiated:
                 self.show_update_modal(res)
         else:
             if user_initiated:
                 if hasattr(self, "lbl_update_status") and self.lbl_update_status.winfo_exists():
-                    self.lbl_update_status.configure(text="最新バージョンです", text_color=COLOR_TEXT_MUTED)
-                self.log("アプリは最新バージョンです")
+                    self.lbl_update_status.configure(text=t("help.update_latest"), text_color=COLOR_TEXT_MUTED)
+                self.log(t("settings.log_update_latest"))
 
     def show_update_modal(self, res):
         dlg = ctk.CTkToplevel(self)
-        dlg.title("ぺこすこあ アップデート")
+        dlg.title(t("dialog.update_modal_title"))
         dlg.geometry("440x370")
         dlg.resizable(False, False)
         dlg.transient(self)
@@ -855,7 +886,7 @@ class PekoScoreApp(ctk.CTk):
 
         # ヘッダー
         ctk.CTkLabel(
-            dlg, text="🎉 新しいバージョンが見つかりました！",
+            dlg, text=t("dialog.update_modal_header"),
             font=ctk.CTkFont(family="Meiryo UI", size=15, weight="bold"),
             text_color=COLOR_SAGE_GREEN
         ).pack(pady=(18, 4))
@@ -863,7 +894,7 @@ class PekoScoreApp(ctk.CTk):
         latest_v = res.get("latest_version", "")
         cur_v = res.get("current_version", updater.CURRENT_VERSION)
         ctk.CTkLabel(
-            dlg, text=f"現在: {cur_v}  ➜  最新: {latest_v}",
+            dlg, text=t("dialog.update_modal_version", cur=cur_v, latest=latest_v),
             font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         ).pack(pady=(0, 10))
@@ -893,7 +924,7 @@ class PekoScoreApp(ctk.CTk):
             btn_browser.configure(state="disabled")
             lbl_prog.pack(pady=(0, 4))
             prog_bar.pack(pady=(0, 8))
-            lbl_prog.configure(text="最新版をダウンロード中...")
+            lbl_prog.configure(text=t("dialog.update_downloading"))
 
             base_dir = get_app_dir()
 
@@ -919,17 +950,17 @@ class PekoScoreApp(ctk.CTk):
                     while not prog_queue.empty():
                         p, err, should_exit = prog_queue.get_nowait()
                         if err:
-                            lbl_prog.configure(text=f"エラー: {err}", text_color="#D9534F")
+                            lbl_prog.configure(text=t("dialog.update_error", err=err), text_color="#D9534F")
                             btn_browser.configure(state="normal")
                         elif should_exit:
-                            lbl_prog.configure(text="更新を適用して再起動します...")
+                            lbl_prog.configure(text=t("dialog.update_applying"))
                             # アプリを完全に終了してバッチにファイルを委ねる
                             self.after(300, self.on_close_and_force_exit)
                             return
                         elif p is not None:
                             prog_bar.set(p)
                             pct = int(p * 100)
-                            lbl_prog.configure(text=f"ダウンロード中... {pct}%" if p < 1.0 else "更新を適用して再起動します...")
+                            lbl_prog.configure(text=t("dialog.update_download_progress", pct=pct) if p < 1.0 else t("dialog.update_applying"))
                 except Exception:
                     pass
                 if dlg.winfo_exists():
@@ -938,7 +969,7 @@ class PekoScoreApp(ctk.CTk):
             dlg.after(100, poll_progress)
 
         btn_update = ctk.CTkButton(
-            btn_frame, text="今すぐ自動更新",
+            btn_frame, text=t("dialog.update_btn_now"),
             font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"),
             fg_color=COLOR_SAGE_GREEN, hover_color=COLOR_SAGE_HOVER,
             command=start_download
@@ -946,7 +977,7 @@ class PekoScoreApp(ctk.CTk):
         btn_update.pack(side="left", expand=True, fill="x", padx=(0, 6))
 
         btn_browser = ctk.CTkButton(
-            btn_frame, text="GitHubで確認",
+            btn_frame, text=t("dialog.update_btn_github"),
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             fg_color="transparent", text_color=COLOR_TEXT_MAIN,
             border_width=1, border_color=COLOR_CARD_BORDER,
@@ -955,7 +986,7 @@ class PekoScoreApp(ctk.CTk):
         btn_browser.pack(side="left", padx=(0, 6))
 
         btn_close = ctk.CTkButton(
-            btn_frame, text="閉じる",
+            btn_frame, text=t("dialog.update_btn_close"),
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             fg_color="transparent", text_color=COLOR_TEXT_MUTED,
             width=60, command=dlg.destroy
@@ -968,12 +999,12 @@ class PekoScoreApp(ctk.CTk):
         self.view_help.grid_columnconfigure(0, weight=1)
         self.view_help.grid_rowconfigure(1, weight=1)
 
-        help_title = ctk.CTkLabel(
-            self.view_help, text="ヘルプ & アプリ情報",
+        self.help_title = ctk.CTkLabel(
+            self.view_help, text=t("help.title"),
             font=ctk.CTkFont(family="Meiryo UI", size=18, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         )
-        help_title.grid(row=0, column=0, sticky="w", padx=20, pady=(14, 8))
+        self.help_title.grid(row=0, column=0, sticky="w", padx=20, pady=(14, 8))
 
         # 左右2カラムのコンテナフレーム
         self.help_container = ctk.CTkFrame(self.view_help, fg_color="transparent")
@@ -1026,7 +1057,7 @@ class PekoScoreApp(ctk.CTk):
 
         # アプリ名
         lbl_name = ctk.CTkLabel(
-            card_left, text="ぺこすこあ",
+            card_left, text=t("app_title"),
             font=ctk.CTkFont(family="Meiryo UI", size=17, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         )
@@ -1068,7 +1099,7 @@ class PekoScoreApp(ctk.CTk):
         # 操作マニュアルを開くボタン
         btn_manual = ctk.CTkButton(
             card_left,
-            text="操作マニュアルを開く",
+            text=t("help.btn_manual"),
             font=ctk.CTkFont(family="Meiryo UI", size=11, weight="bold"),
             fg_color=COLOR_SAGE_GREEN,
             hover_color=COLOR_SAGE_HOVER,
@@ -1103,7 +1134,7 @@ class PekoScoreApp(ctk.CTk):
         # アップデート確認ボタン & ステータス
         self.btn_check_update = ctk.CTkButton(
             card_left,
-            text="アップデートを確認",
+            text=t("help.btn_update"),
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             fg_color=("#E5ECE7", "#323B34"),
             text_color=COLOR_TEXT_MAIN,
@@ -1133,7 +1164,7 @@ class PekoScoreApp(ctk.CTk):
 
         # FAQ 見出し
         lbl_faq_head = ctk.CTkLabel(
-            card_right, text="よくある質問・トラブルシューティング",
+            card_right, text=t("help.section_faq"),
             font=ctk.CTkFont(family="Meiryo UI", size=14, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         )
@@ -1169,7 +1200,7 @@ class PekoScoreApp(ctk.CTk):
 
         # 権利表記 & 免責事項 見出し
         lbl_legal_head = ctk.CTkLabel(
-            card_right, text="権利表記 & 免責事項",
+            card_right, text=t("help.section_legal"),
             font=ctk.CTkFont(family="Meiryo UI", size=13, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         )
@@ -1276,17 +1307,17 @@ class PekoScoreApp(ctk.CTk):
             self.cancel_key_binding()
 
         self.binding_action = action_id
-        action_name = self.hk_action_labels.get(action_id, "")
+        action_name = t(f"hotkey.act_{action_id}")
         
         # ボタンの見た目を「キー入力待ち」に変更
         target_btn = self.hk_buttons.get(action_id)
         if target_btn:
             target_btn.configure(
-                text="入力待ち...", fg_color="#D87A6E", hover_color="#C06357"
+                text=t("hotkey.binding_waiting"), fg_color="#D87A6E", hover_color="#C06357"
             )
 
         # ステータス案内を表示
-        self.binding_status_lbl.configure(text=f'"{action_name}" を割り当て中... キーを押してください (ESCでキャンセル)')
+        self.binding_status_lbl.configure(text=t("hotkey.binding_prompt", action=action_name))
         self.binding_status_frame.pack(fill="x", padx=20, pady=(10, 16))
 
         # 一時的にホットキーサービスを停止してキー衝突を防ぐ
@@ -1304,7 +1335,7 @@ class PekoScoreApp(ctk.CTk):
         # ボタンを元のテキストに戻す
         target_btn = self.hk_buttons.get(act_id)
         if target_btn:
-            cur_key = self.config.get(f"hotkey_{act_id}", "未設定").upper()
+            cur_key = self.config.get(f"hotkey_{act_id}", t("hotkey.not_set")).upper()
             target_btn.configure(
                 text=cur_key, fg_color=COLOR_SAGE_GREEN, hover_color=COLOR_SAGE_HOVER
             )
@@ -1321,7 +1352,7 @@ class PekoScoreApp(ctk.CTk):
         # ESCでキャンセル
         if key_sym in ["escape", "esc"]:
             self.cancel_key_binding()
-            self.log("キー割り当てをキャンセルしました")
+            self.log(t("hotkey.cancel_log"))
             return
 
         # 修飾キー単体（Shift, Control, Alt）の時は決定せず待つ
@@ -1366,8 +1397,8 @@ class PekoScoreApp(ctk.CTk):
         self.unbind("<KeyPress>")
         self.apply_hotkeys()
         
-        action_name = self.hk_action_labels.get(act_id, "")
-        self.log(f'"{action_name}" に "{final_hotkey.upper()}" を割り当てました！')
+        action_name = t(f"hotkey.act_{act_id}")
+        self.log(t("hotkey.assigned_log", action=action_name, key=final_hotkey.upper()))
 
     def on_hotkey_toggle(self):
         self.config["hotkeys_enabled"] = self.switch_hk_enable.get() == 1
@@ -1376,44 +1407,51 @@ class PekoScoreApp(ctk.CTk):
 
     def on_hotkey_action(self, action):
         # スレッドセーフにTkinterメインループで実行
+        src = t("main.source_hotkey")
         if action == "win":
-            self.after(0, lambda: self.on_manual_modify(win_delta=1, source="ショートカット"))
+            self.after(0, lambda: self.on_manual_modify(win_delta=1, source=src))
         elif action == "loss":
-            self.after(0, lambda: self.on_manual_modify(loss_delta=1, source="ショートカット"))
+            self.after(0, lambda: self.on_manual_modify(loss_delta=1, source=src))
         elif action == "undo":
             self.after(0, self.on_undo)
         elif action == "reset":
             self.after(0, self.confirm_reset)
 
-    def on_manual_modify(self, win_delta=0, loss_delta=0, source="手動入力"):
+    def on_manual_modify(self, win_delta=0, loss_delta=0, source=None):
+        if source is None:
+            source = t("main.source_manual")
         self.app_state.modify(win_delta=win_delta, loss_delta=loss_delta)
         if win_delta > 0:
-            self.log(f"{source}: 勝利 (+1)")
+            self.log(t("main.manual_win_plus", source=source))
         elif win_delta < 0:
-            self.log(f"{source}: 勝利 (-1)")
+            self.log(t("main.manual_win_minus", source=source))
         elif loss_delta > 0:
-            self.log(f"{source}: 敗北 (+1)")
+            self.log(t("main.manual_loss_plus", source=source))
         elif loss_delta < 0:
-            self.log(f"{source}: 敗北 (-1)")
+            self.log(t("main.manual_loss_minus", source=source))
 
     def on_undo(self):
         if self.app_state.undo():
-            self.log("直前の操作を取り消しました")
+            self.log(t("main.undo_success"))
         else:
-            self.log("取り消せる履歴がありません")
+            self.log(t("main.undo_empty"))
 
     def confirm_reset(self):
-        ans = messagebox.askyesno("リセットの確認", "勝敗カウントを「0勝0敗」にリセットしますか？")
+        ans = messagebox.askyesno(t("dialog.confirm_reset_title"), t("dialog.confirm_reset_msg"))
         if ans:
             self.app_state.reset()
-            self.log("カウントをリセットしました (0勝0敗)")
+            self.log(t("main.reset_done"))
 
     def on_skin_change(self, choice):
-        skin_id = self.skin_map.get(choice, "glassmorphism")
+        skin_id = "glassmorphism"
+        for k in self.skin_keys:
+            if choice == t(f"obs.skin_{k}"):
+                skin_id = k
+                break
         self.app_state.skin = skin_id
         self.config["skin"] = skin_id
         save_config(self.config)
-        self.log(f"OBSスキンを変更: {choice}")
+        self.log(t("settings.log_skin", skin=choice))
         self.rebuild_color_controls()
         self.update_obs_preview()
 
@@ -1423,14 +1461,17 @@ class PekoScoreApp(ctk.CTk):
             return
 
         # プリセットコンボボックスの更新
-        skin_presets = self.config.get("skin_presets", {}).get(skin, {"デフォルト": {}})
+        default_preset_name = t("obs.preset_default")
+        skin_presets = self.config.get("skin_presets", {}).get(skin, {default_preset_name: {}})
         preset_names = list(skin_presets.keys())
+        if default_preset_name not in preset_names:
+            preset_names.insert(0, default_preset_name)
         self.preset_combo.configure(values=preset_names)
-        cur_preset = self.config.get("current_preset", {}).get(skin, "デフォルト")
+        cur_preset = self.config.get("current_preset", {}).get(skin, default_preset_name)
         if cur_preset in preset_names:
             self.preset_combo.set(cur_preset)
         else:
-            self.preset_combo.set("デフォルト")
+            self.preset_combo.set(default_preset_name)
 
         # タイル枠のクリア
         for child in self.color_tiles_frame.winfo_children():
@@ -1441,17 +1482,22 @@ class PekoScoreApp(ctk.CTk):
 
         # 2列グリッドで整列配置
         self.color_tiles_frame.grid_columnconfigure((0, 1), weight=1)
-        for idx, (color_key, color_label) in enumerate(labels):
+        for idx, (color_key, orig_color_label) in enumerate(labels):
             row_idx = idx // 2
             col_idx = idx % 2
 
             item_frame = ctk.CTkFrame(self.color_tiles_frame, fg_color="transparent")
             item_frame.grid(row=row_idx, column=col_idx, padx=6, pady=4, sticky="w")
 
+            dict_key = f"ticket_{color_key}" if skin == "ticket" and color_key in ("bg", "border") else color_key
+            color_label = t(f"color_labels.{dict_key}")
+            if color_label == f"color_labels.{dict_key}":
+                color_label = orig_color_label
+
             ctk.CTkLabel(
                 item_frame, text=f"{color_label}:",
                 font=ctk.CTkFont(family="Meiryo UI", size=11),
-                text_color=COLOR_TEXT_MAIN, width=82, anchor="w"
+                text_color=COLOR_TEXT_MAIN, width=90, anchor="w"
             ).pack(side="left")
 
             val_hex = cur_colors.get(color_key, "#FFFFFF")
@@ -1477,7 +1523,7 @@ class PekoScoreApp(ctk.CTk):
         cur_hex = self.config.get("skin_colors", {}).get(skin, {}).get(key, "#FFFFFF")
         
         # Windowsカラーピッカーダイアログ
-        color = colorchooser.askcolor(color=cur_hex, title=f"[{label}] の色を選択")
+        color = colorchooser.askcolor(color=cur_hex, title=f"[{label}]")
         if color and color[1]:
             chosen_hex = color[1].upper()
             if skin not in self.config["skin_colors"]:
@@ -1485,23 +1531,23 @@ class PekoScoreApp(ctk.CTk):
             self.config["skin_colors"][skin][key] = chosen_hex
             if "current_preset" not in self.config:
                 self.config["current_preset"] = {}
-            self.config["current_preset"][skin] = "カスタム"
+            self.config["current_preset"][skin] = t("obs.preset_custom")
             save_config(self.config)
 
             self.app_state.skin_colors = self.config["skin_colors"]
             self.rebuild_color_controls()
             self.update_obs_preview()
-            self.log(f"カラー変更 [{label}]: {chosen_hex}")
+            self.log(t("settings.log_color", label=label, hex=chosen_hex))
 
     def on_save_preset(self):
         skin = getattr(self.app_state, "skin", "glassmorphism")
-        dialog = ctk.CTkInputDialog(text="保存するプリセット名を入力してください:", title="プリセット保存")
+        dialog = ctk.CTkInputDialog(text=t("dialog.save_preset_prompt"), title=t("dialog.save_preset_title"))
         name = dialog.get_input()
         if not name:
             return
         name = name.strip()
-        if not name or name == "デフォルト":
-            messagebox.showwarning("プリセット保存", "「デフォルト」以外の有効な名前を入力してください。")
+        if not name or name in ("デフォルト", "Default", t("obs.preset_default")):
+            messagebox.showwarning(t("dialog.save_preset_title"), t("dialog.save_preset_warn"))
             return
 
         cur_colors = copy.deepcopy(self.config.get("skin_colors", {}).get(skin, {}))
@@ -1517,11 +1563,14 @@ class PekoScoreApp(ctk.CTk):
         save_config(self.config)
 
         self.rebuild_color_controls()
-        self.log(f"プリセットを保存しました: {name}")
-        messagebox.showinfo("プリセット保存", f"プリセット「{name}」を保存しました！")
+        self.log(t("settings.log_preset_save", name=name))
+        messagebox.showinfo(t("dialog.save_preset_title"), t("dialog.save_preset_success", name=name))
 
     def on_preset_select(self, choice):
         skin = getattr(self.app_state, "skin", "glassmorphism")
+        if choice in ("デフォルト", "Default", t("obs.preset_default")):
+            self.on_reset_preset()
+            return
         presets = self.config.get("skin_presets", {}).get(skin, {})
         if choice in presets:
             self.config["skin_colors"][skin] = copy.deepcopy(presets[choice])
@@ -1533,7 +1582,7 @@ class PekoScoreApp(ctk.CTk):
             self.app_state.skin_colors = self.config["skin_colors"]
             self.rebuild_color_controls()
             self.update_obs_preview()
-            self.log(f"プリセット適用: {choice}")
+            self.log(t("settings.log_preset_apply", name=choice))
 
     def on_reset_preset(self):
         skin = getattr(self.app_state, "skin", "glassmorphism")
@@ -1541,37 +1590,37 @@ class PekoScoreApp(ctk.CTk):
         self.config["skin_colors"][skin] = copy.deepcopy(defaults)
         if "current_preset" not in self.config:
             self.config["current_preset"] = {}
-        self.config["current_preset"][skin] = "デフォルト"
+        self.config["current_preset"][skin] = t("obs.preset_default")
         save_config(self.config)
 
         self.app_state.skin_colors = self.config["skin_colors"]
         self.rebuild_color_controls()
         self.update_obs_preview()
-        self.log("配色をデフォルトに戻しました")
+        self.log(t("settings.log_preset_reset"))
 
     def on_delete_preset(self):
         skin = getattr(self.app_state, "skin", "glassmorphism")
         cur_preset = self.preset_combo.get()
-        if cur_preset == "デフォルト" or cur_preset == "カスタム":
-            messagebox.showwarning("プリセット削除", "「デフォルト」は削除できません。")
+        if cur_preset in ("デフォルト", "Default", "カスタム", "Custom", t("obs.preset_default"), t("obs.preset_custom")):
+            messagebox.showwarning(t("dialog.delete_preset_title"), t("dialog.delete_preset_warn"))
             return
-        ans = messagebox.askyesno("プリセット削除", f"プリセット「{cur_preset}」を削除しますか？")
+        ans = messagebox.askyesno(t("dialog.delete_preset_title"), t("dialog.delete_preset_confirm", preset=cur_preset))
         if ans:
             if cur_preset in self.config.get("skin_presets", {}).get(skin, {}):
                 del self.config["skin_presets"][skin][cur_preset]
-                self.config["current_preset"][skin] = "デフォルト"
+                self.config["current_preset"][skin] = t("obs.preset_default")
                 self.config["skin_colors"][skin] = copy.deepcopy(get_default_colors(skin))
                 save_config(self.config)
                 self.app_state.skin_colors = self.config["skin_colors"]
                 self.rebuild_color_controls()
                 self.update_obs_preview()
-                self.log(f"プリセットを削除しました: {cur_preset}")
+                self.log(t("settings.log_preset_delete", name=cur_preset))
 
     def on_font_change(self, choice):
         self.app_state.font_family = choice
         self.config["font_family"] = choice
         save_config(self.config)
-        self.log(f"OBSフォントを変更: {choice}")
+        self.log(t("settings.log_font", font=choice))
         self.update_obs_preview()
 
     def on_size_change(self, value):
@@ -1599,7 +1648,8 @@ class PekoScoreApp(ctk.CTk):
                 font_size=font_size,
                 width=480,
                 height=110,
-                colors=cur_colors
+                colors=cur_colors,
+                language=get_i18n().current_lang
             )
             self.preview_ctk_img = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(480, 110))
             if hasattr(self, "lbl_obs_preview"):
@@ -1608,13 +1658,13 @@ class PekoScoreApp(ctk.CTk):
             print(f"Preview render error: {e}")
 
     def on_theme_change(self, value):
-        mode = "Dark" if "ダーク" in value else "Light"
+        mode = "Dark" if ("ダーク" in value or "dark" in value.lower()) else "Light"
         self.appearance_mode = mode.lower()
         ctk.set_appearance_mode(mode)
         self.config["appearance_mode"] = self.appearance_mode
         save_config(self.config)
         self.show_view(getattr(self, "current_view_name", "settings"))
-        self.log(f"外観テーマを変更: {value}")
+        self.log(t("settings.log_theme", theme=value))
 
     def on_anim_toggle(self):
         self.app_state.animation_enabled = self.switch_anim.get() == 1
@@ -1625,19 +1675,20 @@ class PekoScoreApp(ctk.CTk):
         self.app_state.auto_detect_enabled = self.switch_auto.get() == 1
         self.config["auto_detect_enabled"] = self.app_state.auto_detect_enabled
         save_config(self.config)
-        self.log(f"自動検知: {'有効' if self.app_state.auto_detect_enabled else '無効'}")
+        stat = t("settings.status_enabled") if self.app_state.auto_detect_enabled else t("settings.status_disabled")
+        self.log(t("settings.log_auto_detect", status=stat))
 
     def on_monitor_change(self, choice):
         val = self.monitor_options.get(choice, "auto")
         self.app_state.target_monitor = val
         self.config["target_monitor"] = val
         save_config(self.config)
-        self.log(f"監視モニターを変更: {choice}")
+        self.log(t("settings.log_monitor", mon=choice))
 
     def copy_obs_url(self):
         self.clipboard_clear()
         self.clipboard_append(self.obs_url)
-        messagebox.showinfo("コピー完了", f"OBS用URLをクリップボードにコピーしました！\n{self.obs_url}")
+        messagebox.showinfo(t("dialog.copy_url_title"), t("dialog.copy_url_msg", url=self.obs_url))
 
     def on_sound_toggle(self):
         enabled = self.switch_sound.get() == 1
@@ -1647,14 +1698,16 @@ class PekoScoreApp(ctk.CTk):
             self.sound_options_box.pack(fill="x", padx=20, pady=(0, 10))
         else:
             self.sound_options_box.pack_forget()
-        self.log(f"効果音(SE): {'有効' if enabled else '無効'}")
+        stat = t("settings.status_enabled") if enabled else t("settings.status_disabled")
+        self.log(t("settings.log_sound", status=stat))
 
     def on_separate_sound_toggle(self):
         is_sep = self.switch_separate.get() == 1
         self.config["sound_separate_win_loss"] = is_sep
         save_config(self.config)
         self.rebuild_sound_controls()
-        self.log(f"勝敗別SE: {'有効' if is_sep else '共通音'}")
+        stat = t("settings.status_enabled") if is_sep else t("settings.sound_common")
+        self.log(t("settings.log_separate", status=stat))
 
     def rebuild_sound_controls(self):
         # 既存コントロール消去
@@ -1667,7 +1720,7 @@ class PekoScoreApp(ctk.CTk):
             # 共通モード
             self._build_single_sound_row(
                 self.sound_controls_frame,
-                label_text="通知SE:",
+                label_text=t("settings.sound_notify"),
                 file_key="sound_notify_file",
                 vol_key="sound_notify_volume",
                 sound_type="notify"
@@ -1676,14 +1729,14 @@ class PekoScoreApp(ctk.CTk):
             # 勝敗個別モード
             self._build_single_sound_row(
                 self.sound_controls_frame,
-                label_text="勝利時SE:",
+                label_text=t("settings.sound_win"),
                 file_key="sound_win_file",
                 vol_key="sound_win_volume",
                 sound_type="victory"
             )
             self._build_single_sound_row(
                 self.sound_controls_frame,
-                label_text="敗北時SE:",
+                label_text=t("settings.sound_loss"),
                 file_key="sound_loss_file",
                 vol_key="sound_loss_volume",
                 sound_type="defeat"
@@ -1695,14 +1748,14 @@ class PekoScoreApp(ctk.CTk):
 
         # ラベル
         ctk.CTkLabel(
-            row_frame, text=label_text, width=64, anchor="w",
+            row_frame, text=label_text, width=74, anchor="w",
             font=ctk.CTkFont(family="Meiryo UI", size=12, weight="bold"),
             text_color=COLOR_TEXT_MAIN
         ).pack(side="left")
 
         # ファイル名表示 (最大12文字程度で省略表示)
         cur_file = self.config.get(file_key, "")
-        raw_name = os.path.basename(cur_file) if cur_file else "デフォルト音"
+        raw_name = os.path.basename(cur_file) if cur_file else t("settings.sound_default")
         disp_name = (raw_name[:12] + "...") if len(raw_name) > 13 else raw_name
         lbl_file = ctk.CTkLabel(
             row_frame, text=disp_name, width=88, anchor="w",
@@ -1713,7 +1766,6 @@ class PekoScoreApp(ctk.CTk):
 
         # ファイル参照ボタン
         def choose_file():
-            # 初期フォルダとして同梱の sounds ディレクトリを開く
             res_dir = get_resource_dir()
             init_dir = os.path.join(res_dir, "sounds")
             if not os.path.exists(init_dir):
@@ -1722,19 +1774,19 @@ class PekoScoreApp(ctk.CTk):
                 init_dir = None
 
             path = filedialog.askopenfilename(
-                title=f"{label_text} 音声ファイルの選択",
+                title=t("settings.sound_dialog_title", label=label_text),
                 initialdir=init_dir,
-                filetypes=[("音声ファイル", "*.wav;*.mp3;*.ogg"), ("すべてのファイル", "*.*")]
+                filetypes=[(t("settings.sound_file_filter"), "*.wav;*.mp3;*.ogg"), (t("settings.all_files"), "*.*")]
             )
             if path:
                 self.config[file_key] = path
                 save_config(self.config)
                 bname = os.path.basename(path)
                 lbl_file.configure(text=(bname[:12] + "...") if len(bname) > 13 else bname)
-                self.log(f"{label_text} ファイルを設定: {bname}")
+                self.log(t("settings.log_sound_set", label=label_text, file=bname))
 
         btn_browse = ctk.CTkButton(
-            row_frame, text="参照...", width=50, height=24,
+            row_frame, text=t("settings.sound_browse"), width=50, height=24,
             font=ctk.CTkFont(family="Meiryo UI", size=11),
             fg_color=COLOR_SAGE_LIGHT, text_color=COLOR_TEXT_MAIN,
             hover_color=COLOR_NAV_HOVER, command=choose_file
@@ -1748,7 +1800,7 @@ class PekoScoreApp(ctk.CTk):
             sound_service.play_sound(file_path=f_path, sound_type=sound_type, volume=v)
 
         btn_play = ctk.CTkButton(
-            row_frame, text="▶ 試聴", width=52, height=24,
+            row_frame, text=t("settings.sound_test"), width=52, height=24,
             font=ctk.CTkFont(family="Meiryo UI", size=11, weight="bold"),
             fg_color=COLOR_SAGE_GREEN, hover_color=COLOR_SAGE_HOVER,
             command=test_play
@@ -1759,11 +1811,11 @@ class PekoScoreApp(ctk.CTk):
         def reset_to_default():
             self.config[file_key] = ""
             save_config(self.config)
-            lbl_file.configure(text="デフォルト音")
-            self.log(f"{label_text} をデフォルト音に戻しました")
+            lbl_file.configure(text=t("settings.sound_default"))
+            self.log(t("settings.log_sound_reset", label=label_text))
 
         btn_default = ctk.CTkButton(
-            row_frame, text="初期化", width=44, height=24,
+            row_frame, text=t("settings.sound_reset"), width=44, height=24,
             font=ctk.CTkFont(family="Meiryo UI", size=10),
             fg_color="transparent", text_color=COLOR_TEXT_MUTED,
             hover_color=COLOR_NAV_HOVER, command=reset_to_default
@@ -1792,13 +1844,14 @@ class PekoScoreApp(ctk.CTk):
         vol_slider.set(cur_vol)
         vol_slider.pack(side="left")
 
-    def on_detect_result(self, result_type, msg):
-        self.after(0, lambda: self.log(msg))
-        # 勝敗検知時のSE再生
+    def on_detect_result(self, result_type, msg=None):
         r_type = str(result_type).upper()
         is_win = r_type in ("VICTORY", "WIN")
         is_loss = r_type in ("DEFEAT", "LOSS")
+        log_text = t("main.detected_victory") if is_win else (t("main.detected_defeat") if is_loss else (msg or ""))
+        self.after(0, lambda: self.log(log_text))
 
+        # 勝敗検知時のSE再生
         if self.config.get("sound_enabled", True) and (is_win or is_loss):
             is_sep = self.config.get("sound_separate_win_loss", True)
             if is_sep:
@@ -1816,17 +1869,20 @@ class PekoScoreApp(ctk.CTk):
                 sound_service.play_sound(file_path=f_path, sound_type="notify", volume=vol)
 
     def log(self, text):
-        self.log_label.configure(text=f"ログ: {text}")
+        self.log_label.configure(text=t("main.log_format", text=text))
 
     def update_ui_loop(self):
         # スコア反映
-        score_text = f"{self.app_state.wins}勝 {self.app_state.losses}敗"
+        score_text = t("main.score_format", wins=self.app_state.wins, losses=self.app_state.losses)
         if self.score_display.cget("text") != score_text:
             self.score_display.configure(text=score_text)
             self.update_obs_preview()
 
         # ステータス反映
-        self.status_pill.configure(text=f"● {self.app_state.status_text}")
+        status_k = getattr(self.app_state, "status_key", "waiting")
+        status_p = getattr(self.app_state, "status_params", {})
+        stat_text = t(f"main.status_{status_k}", **status_p)
+        self.status_pill.configure(text=f"● {stat_text}")
 
         # ヘルプファイルのホットリロード監視
         self.check_help_content_reload()
@@ -1841,11 +1897,161 @@ class PekoScoreApp(ctk.CTk):
 
         self.after(100, self.update_ui_loop)
 
+    def on_language_change(self, choice):
+        lang = "en" if "English" in choice or "en" in choice.lower() else "ja"
+        cur_lang = get_i18n().current_lang
+        if lang == cur_lang:
+            return
+
+        title = t("dialog.restart_lang_title")
+        prompt = t("dialog.restart_lang_prompt")
+        ans = messagebox.askyesno(title, prompt)
+        if ans:
+            # 設定保存して即座に再起動
+            self.config["language"] = lang
+            save_config(self.config)
+            self.restart_app()
+        else:
+            # 「あとで」の場合: 設定は保存し次回起動時に反映
+            self.config["language"] = lang
+            save_config(self.config)
+            # 現在のUI言語にセグメント表示を戻す
+            cur_choice = "English / 英語" if cur_lang == "en" else "Japanese / 日本語"
+            if hasattr(self, "lang_segment"):
+                self.lang_segment.set(cur_choice)
+            messagebox.showinfo(title, t("dialog.restart_lang_later"))
+
+    def restart_app(self):
+        try:
+            self.on_close()
+        except Exception:
+            pass
+
+        import subprocess
+        if getattr(sys, 'frozen', False):
+            subprocess.Popen([sys.executable])
+        else:
+            main_script = os.path.join(get_app_dir(), "app.py")
+            subprocess.Popen([sys.executable, main_script])
+        os._exit(0)
+
+    def apply_language(self):
+        # 1. ウィンドウタイトル & ブランド名
+        self.title(t("app_title"))
+        if hasattr(self, "lbl_brand_title") and self.lbl_brand_title.winfo_exists():
+            self.lbl_brand_title.configure(text=t("app_title"))
+
+        # 2. サイドバーナビゲーション
+        if hasattr(self, "btn_nav_main") and self.btn_nav_main.winfo_exists():
+            self.btn_nav_main.configure(text=" " + t("nav.main"))
+        if hasattr(self, "btn_nav_obs") and self.btn_nav_obs.winfo_exists():
+            self.btn_nav_obs.configure(text=" " + t("nav.obs"))
+        if hasattr(self, "btn_nav_hotkey") and self.btn_nav_hotkey.winfo_exists():
+            self.btn_nav_hotkey.configure(text=" " + t("nav.hotkey"))
+        if hasattr(self, "btn_nav_settings") and self.btn_nav_settings.winfo_exists():
+            self.btn_nav_settings.configure(text=" " + t("nav.settings"))
+        if hasattr(self, "btn_nav_help") and self.btn_nav_help.winfo_exists():
+            badge_text = t("help.nav_update_badge").strip() if getattr(self, "_update_badge_visible", False) else t("nav.help")
+            self.btn_nav_help.configure(text=" " + badge_text)
+        if hasattr(self, "btn_copy_url") and self.btn_copy_url.winfo_exists():
+            self.btn_copy_url.configure(text=t("nav.copy_obs_url"))
+
+        # 3. メイン画面
+        if hasattr(self, "score_display") and self.score_display.winfo_exists():
+            self.score_display.configure(text=t("main.score_format", wins=self.app_state.wins, losses=self.app_state.losses))
+        if hasattr(self, "btn_win_plus") and self.btn_win_plus.winfo_exists():
+            self.btn_win_plus.configure(text=t("main.win_plus"))
+        if hasattr(self, "btn_win_minus") and self.btn_win_minus.winfo_exists():
+            self.btn_win_minus.configure(text=t("main.win_minus"))
+        if hasattr(self, "btn_loss_plus") and self.btn_loss_plus.winfo_exists():
+            self.btn_loss_plus.configure(text=t("main.loss_plus"))
+        if hasattr(self, "btn_loss_minus") and self.btn_loss_minus.winfo_exists():
+            self.btn_loss_minus.configure(text=t("main.loss_minus"))
+        if hasattr(self, "btn_undo") and self.btn_undo.winfo_exists():
+            self.btn_undo.configure(text=t("main.undo"))
+        if hasattr(self, "btn_reset") and self.btn_reset.winfo_exists():
+            self.btn_reset.configure(text=t("main.reset"))
+
+        # 4. OBS設定画面
+        if hasattr(self, "obs_title") and self.obs_title.winfo_exists():
+            self.obs_title.configure(text=t("obs.title"))
+        if hasattr(self, "obs_url_label") and self.obs_url_label.winfo_exists():
+            self.obs_url_label.configure(text=t("obs.url_label", url=self.obs_url))
+        if hasattr(self, "obs_url_sub") and self.obs_url_sub.winfo_exists():
+            self.obs_url_sub.configure(text=t("obs.url_hint"))
+        if hasattr(self, "lbl_skin_label") and self.lbl_skin_label.winfo_exists():
+            self.lbl_skin_label.configure(text=t("obs.skin_label"))
+        if hasattr(self, "skin_combo") and self.skin_combo.winfo_exists():
+            skin_display_names = [t(f"obs.skin_{k}") for k in self.skin_keys]
+            self.skin_combo.configure(values=skin_display_names)
+            cur_skin = getattr(self.app_state, "skin", "glassmorphism")
+            self.skin_combo.set(t(f"obs.skin_{cur_skin}"))
+        if hasattr(self, "lbl_preset_label") and self.lbl_preset_label.winfo_exists():
+            self.lbl_preset_label.configure(text=t("obs.preset_label"))
+        if hasattr(self, "btn_save_preset") and self.btn_save_preset.winfo_exists():
+            self.btn_save_preset.configure(text=t("obs.preset_save"))
+        if hasattr(self, "btn_reset_preset") and self.btn_reset_preset.winfo_exists():
+            self.btn_reset_preset.configure(text=t("obs.preset_reset"))
+        if hasattr(self, "btn_delete_preset") and self.btn_delete_preset.winfo_exists():
+            self.btn_delete_preset.configure(text=t("obs.preset_delete"))
+        if hasattr(self, "lbl_font_label") and self.lbl_font_label.winfo_exists():
+            self.lbl_font_label.configure(text=t("obs.font_label"))
+        if hasattr(self, "lbl_size_label") and self.lbl_size_label.winfo_exists():
+            self.lbl_size_label.configure(text=t("obs.size_label"))
+        if hasattr(self, "switch_anim") and self.switch_anim.winfo_exists():
+            self.switch_anim.configure(text=t("obs.anim_label"))
+        self.rebuild_color_controls()
+        self.update_obs_preview()
+
+        # 5. ショートカット設定画面
+        if hasattr(self, "hk_title") and self.hk_title.winfo_exists():
+            self.hk_title.configure(text=t("hotkey.title"))
+        if hasattr(self, "switch_hk_enable") and self.switch_hk_enable.winfo_exists():
+            self.switch_hk_enable.configure(text=t("hotkey.enable_switch"))
+        if hasattr(self, "lbl_hk_desc") and self.lbl_hk_desc.winfo_exists():
+            self.lbl_hk_desc.configure(text=t("hotkey.desc"))
+        if hasattr(self, "hk_action_labels_widgets"):
+            for act_id, lbl_widget in self.hk_action_labels_widgets.items():
+                if lbl_widget.winfo_exists():
+                    lbl_widget.configure(text=t(f"hotkey.act_{act_id}"))
+        if hasattr(self, "binding_status_lbl") and self.binding_status_lbl.winfo_exists():
+            self.binding_status_lbl.configure(text=t("hotkey.binding_status"))
+
+        # 6. 環境設定画面
+        if hasattr(self, "set_title") and self.set_title.winfo_exists():
+            self.set_title.configure(text=t("settings.title"))
+        if hasattr(self, "lbl_theme") and self.lbl_theme.winfo_exists():
+            self.lbl_theme.configure(text=t("settings.theme_label"))
+        if hasattr(self, "theme_segment") and self.theme_segment.winfo_exists():
+            self.theme_segment.configure(values=[t("settings.theme_light"), t("settings.theme_dark")])
+            cur_th = t("settings.theme_dark") if self.appearance_mode == "dark" else t("settings.theme_light")
+            self.theme_segment.set(cur_th)
+        if hasattr(self, "lbl_lang") and self.lbl_lang.winfo_exists():
+            self.lbl_lang.configure(text=t("settings.language_label"))
+        if hasattr(self, "switch_auto") and self.switch_auto.winfo_exists():
+            self.switch_auto.configure(text=t("settings.auto_detect"))
+        if hasattr(self, "lbl_mon") and self.lbl_mon.winfo_exists():
+            self.lbl_mon.configure(text=t("settings.monitor_label"))
+        if hasattr(self, "switch_sound") and self.switch_sound.winfo_exists():
+            self.switch_sound.configure(text=t("settings.sound_enable"))
+        if hasattr(self, "switch_separate") and self.switch_separate.winfo_exists():
+            self.switch_separate.configure(text=t("settings.sound_separate"))
+        self.rebuild_sound_controls()
+        if hasattr(self, "lbl_settings_desc") and self.lbl_settings_desc.winfo_exists():
+            self.lbl_settings_desc.configure(text=t("settings.desc"))
+
+        # 7. ヘルプ画面
+        if hasattr(self, "help_title") and self.help_title.winfo_exists():
+            self.help_title.configure(text=t("help.title"))
+        self.rebuild_help_view_content()
+
     def on_close(self):
         # 設定保存して安全に終了
         self.config["wins"] = self.app_state.wins
         self.config["losses"] = self.app_state.losses
         self.config["appearance_mode"] = getattr(self, "appearance_mode", "light")
+        if "language" not in self.config:
+            self.config["language"] = get_i18n().current_lang
         save_config(self.config)
         self.hotkey_service.stop()
         self.detector.stop()

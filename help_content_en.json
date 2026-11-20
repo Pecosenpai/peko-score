@@ -1,0 +1,27 @@
+{
+  "app_info": {
+    "version": "Ver 1.0.6",
+    "subtitle": "Streamer Match Assistant\nAuto Win/Loss Counter",
+    "credit": "Presented by PekoPeko-Do\n(ぺこぺこ堂)",
+    "contact_button_text": "Feedback & Inquiries",
+    "contact_url": "https://forms.gle/2tgdAAJgxQMVXjAJ8",
+    "contact_hint": "*Opens Google Form",
+    "btn_manual": "Open User Manual",
+    "btn_update": "Check for Updates"
+  },
+  "faqs": [
+    {
+      "q": "Wins/losses are not automatically counted",
+      "a": "Please make sure your game display mode is set to 'Borderless Windowed' or 'Windowed'. Fullscreen exclusive mode or overlapping windows may prevent screen capture."
+    },
+    {
+      "q": "Consecutive matches are not counted immediately",
+      "a": "To prevent duplicate counting, there is a 25-second cooldown period after each detection before the next match can be detected."
+    },
+    {
+      "q": "Counter is not showing in OBS",
+      "a": "Verify the Browser Source URL is set to 'http://127.0.0.1:8080/counter' and not blocked by firewall/antivirus software."
+    }
+  ],
+  "legal_text": "【Trademarks & Copyrights】\nAll trademarks, logos, and game intellectual property belong to their respective owners.\nThis is an unofficial, fan-made tool and is not affiliated with or endorsed by any game publishers.\n\n【Disclaimer】\nThe developer assumes no liability for any issues or damages arising from the use of this tool. Please comply with your streaming platform's terms of service.\n\n【Fonts & UI】\nZen Maru Gothic (SIL OFL 1.1) / © 2026 PekoPeko-Do"
+}

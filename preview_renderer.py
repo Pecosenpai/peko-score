@@ -84,10 +84,14 @@ def draw_dashed_rounded_rect(draw, bbox, radius, color, width=2, dash_len=5, gap
     draw.arc([x1 - radius * 2, y1 - radius * 2, x1, y1], 0, 90, fill=color, width=width)
     draw.arc([x0, y1 - radius * 2, x0 + radius * 2, y1], 90, 180, fill=color, width=width)
 
-def render_preview(skin="glassmorphism", wins=0, losses=0, font_family="Meiryo UI", font_size=58, width=480, height=116, colors=None):
+def render_preview(skin="glassmorphism", wins=0, losses=0, font_family="Meiryo UI", font_size=58, width=480, height=116, colors=None, language="ja"):
     # OBS配信画面再現背景
     img = Image.new("RGBA", (width, height), (16, 20, 26, 255))
     draw = ImageDraw.Draw(img)
+
+    w_unit = "W" if language == "en" else "勝"
+    l_unit = "L" if language == "en" else "敗"
+    obs_label = "OBS Transparent Preview" if language == "en" else "OBS 透過プレビュー"
     
     cs = 12
     for y in range(0, height, cs):
@@ -150,7 +154,7 @@ def render_preview(skin="glassmorphism", wins=0, losses=0, font_family="Meiryo U
 
         # スコア行
         score_y = cy + 12
-        draw_score_row(draw, cx, score_y, str(wins), "勝", str(losses), "敗", font_main, font_sub,
+        draw_score_row(draw, cx, score_y, str(wins), w_unit, str(losses), l_unit, font_main, font_sub,
                        c_w=col_win[:3], c_w_lbl=(226, 236, 229),
                        c_l=col_loss[:3], c_l_lbl=(226, 236, 229))
 
@@ -186,12 +190,12 @@ def render_preview(skin="glassmorphism", wins=0, losses=0, font_family="Meiryo U
         f_badge_sub = get_sub_font(font_family, 13, bold=True)
 
         top_cy = (y0 + mid_y) // 2
-        draw_badge_single_row(draw, cx, top_cy, str(wins), "勝",
+        draw_badge_single_row(draw, cx, top_cy, str(wins), w_unit,
                               f_badge_num, f_badge_sub,
                               c_num=col_top_text[:3], c_unit=col_top_text[:3])
 
         bot_cy = (mid_y + y1) // 2
-        draw_badge_single_row(draw, cx, bot_cy, str(losses), "敗",
+        draw_badge_single_row(draw, cx, bot_cy, str(losses), l_unit,
                               f_badge_num, f_badge_sub,
                               c_num=col_bot_text[:3], c_unit=col_bot_text[:3])
 
@@ -213,7 +217,7 @@ def render_preview(skin="glassmorphism", wins=0, losses=0, font_family="Meiryo U
         draw.text((cx, y0 + 13), "✦ PEKOSCORE ✦", font=font_header, fill=col_border[:3], anchor="mm")
 
         score_y = cy + 12
-        draw_score_row(draw, cx, score_y, str(wins), "勝", str(losses), "敗", font_main, font_sub,
+        draw_score_row(draw, cx, score_y, str(wins), w_unit, str(losses), l_unit, font_main, font_sub,
                        c_w=col_win[:3], c_w_lbl=(74, 94, 83),
                        c_l=col_loss[:3], c_l_lbl=(74, 94, 83))
 
@@ -228,14 +232,14 @@ def render_preview(skin="glassmorphism", wins=0, losses=0, font_family="Meiryo U
         for ox in [-2, -1, 0, 1, 2]:
             for oy in [-2, -1, 0, 1, 2]:
                 if ox != 0 or oy != 0:
-                    draw_score_row(draw, cx + ox, score_y + oy, str(wins), "勝", str(losses), "敗", font_main, font_sub,
+                    draw_score_row(draw, cx + ox, score_y + oy, str(wins), w_unit, str(losses), l_unit, font_main, font_sub,
                                    c_w=col_shadow[:3], c_w_lbl=col_shadow[:3],
                                    c_l=col_shadow[:3], c_l_lbl=col_shadow[:3])
-        draw_score_row(draw, cx, score_y, str(wins), "勝", str(losses), "敗", font_main, font_sub,
+        draw_score_row(draw, cx, score_y, str(wins), w_unit, str(losses), l_unit, font_main, font_sub,
                        c_w=col_win[:3], c_w_lbl=col_unit[:3],
                        c_l=col_loss[:3], c_l_lbl=col_unit[:3])
 
-    draw.text((width - 8, 8), "OBS 透過プレビュー", font=font_fixed_label, fill=(130, 145, 165, 170), anchor="rt")
+    draw.text((width - 8, 8), obs_label, font=font_fixed_label, fill=(130, 145, 165, 170), anchor="rt")
 
     return img
 

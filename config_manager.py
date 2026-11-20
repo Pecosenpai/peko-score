@@ -32,7 +32,8 @@ DEFAULT_CONFIG = {
     "sound_win_file": "",
     "sound_win_volume": 70,
     "sound_loss_file": "",
-    "sound_loss_volume": 70
+    "sound_loss_volume": 70,
+    "language": "ja"
 }
 
 def load_config():

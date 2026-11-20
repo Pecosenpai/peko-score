@@ -18,6 +18,9 @@ class StateHolder:
         self.animation_enabled = True
         self.auto_detect_enabled = True
         self.status_text = "待機中"
+        self.status_key = "waiting"
+        self.status_params = {}
+        self.language = "ja"
         self.skin = "glassmorphism"  # glassmorphism, badge, ticket, simple
         self.skin_colors = {}
         self.target_monitor = "auto"  # "auto", 1, 2, ...
@@ -38,6 +41,7 @@ class StateHolder:
                 "animation_enabled": self.animation_enabled,
                 "auto_detect_enabled": self.auto_detect_enabled,
                 "status_text": self.status_text,
+                "language": self.language,
             }
 
     def modify(self, win_delta=0, loss_delta=0, draw_delta=0, record_history=True):

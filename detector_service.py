@@ -96,12 +96,16 @@ class AutoDetectorService:
             while self.running:
                 try:
                     if not self.state.auto_detect_enabled:
+                        self.state.status_key = "paused"
+                        self.state.status_params = {}
                         self.state.status_text = "自動検知: 一時停止中"
                         time.sleep(1.0)
                         continue
 
                     # 1. Overwatch起動チェック
                     if not is_overwatch_running():
+                        self.state.status_key = "waiting"
+                        self.state.status_params = {}
                         self.state.status_text = "ゲーム未起動 (待機中)"
                         time.sleep(1.5)
                         continue
@@ -110,10 +114,14 @@ class AutoDetectorService:
                     elapsed = time.time() - self.last_detected_time
                     if elapsed < self.cooldown_seconds:
                         remain = int(self.cooldown_seconds - elapsed)
+                        self.state.status_key = "cooldown"
+                        self.state.status_params = {"sec": remain}
                         self.state.status_text = f"クールダウン中 ({remain}s)"
                         time.sleep(0.5)
                         continue
 
+                    self.state.status_key = "running"
+                    self.state.status_params = {}
                     self.state.status_text = "監視中 (Overwatch 2)"
 
                     # 3. キャプチャ対象モニターの矩形を特定

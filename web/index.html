@@ -262,21 +262,25 @@
         let currentWins = -1;
         let currentLosses = -1;
         let currentSkin = "";
+        let currentLang = "ja";
 
         const rootContainer = document.getElementById('root-container');
 
-        function renderSkin(skin, wins, losses) {
+        function renderSkin(skin, wins, losses, lang) {
+            const wUnit = (lang === 'en') ? 'W' : '勝';
+            const lUnit = (lang === 'en') ? 'L' : '敗';
+
             if (skin === 'badge') {
                 rootContainer.className = 'skin-badge';
                 rootContainer.innerHTML = `
                     <div class="badge-top">
                         <div class="hud-counter">
-                            <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">勝</span>
+                            <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">${wUnit}</span>
                         </div>
                     </div>
                     <div class="badge-bottom">
                         <div class="hud-counter">
-                            <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit">敗</span>
+                            <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit">${lUnit}</span>
                         </div>
                     </div>
                 `;
@@ -285,16 +289,16 @@
                 rootContainer.innerHTML = `
                     <div class="hud-header">✦ PEKOSCORE ✦</div>
                     <div class="hud-counter">
-                        <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">勝</span>
-                        <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit last">敗</span>
+                        <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">${wUnit}</span>
+                        <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit last">${lUnit}</span>
                     </div>
                 `;
             } else if (skin === 'simple') {
                 rootContainer.className = 'skin-simple';
                 rootContainer.innerHTML = `
                     <div class="hud-counter">
-                        <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">勝</span>
-                        <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit last">敗</span>
+                        <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">${wUnit}</span>
+                        <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit last">${lUnit}</span>
                     </div>
                 `;
             } else {
@@ -307,8 +311,8 @@
                         <span class="dot"></span>
                     </div>
                     <div class="hud-counter">
-                        <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">勝</span>
-                        <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit last">敗</span>
+                        <span class="score-num win-num" id="win-count">${wins}</span><span class="score-unit">${wUnit}</span>
+                        <span class="score-num loss-num" id="loss-count">${losses}</span><span class="score-unit last">${lUnit}</span>
                     </div>
                 `;
             }
@@ -323,11 +327,13 @@
                 const newWins = data.wins;
                 const newLosses = data.losses;
                 const newSkin = data.skin || 'glassmorphism';
+                const newLang = data.language || 'ja';
 
-                // スキンが変わったら構造再構築
-                if (newSkin !== currentSkin) {
+                // スキンまたは言語が変わったら構造再構築
+                if (newSkin !== currentSkin || newLang !== currentLang) {
                     currentSkin = newSkin;
-                    renderSkin(newSkin, newWins, newLosses);
+                    currentLang = newLang;
+                    renderSkin(newSkin, newWins, newLosses, newLang);
                 }
 
                 // カラー設定反映
